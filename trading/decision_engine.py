@@ -56,7 +56,7 @@ class TradingDecisionEngine:
         if psi < delta_trade:
             reason = self.silence.log_silence(cycle_id, psi, delta_trade, plane_scores)
             await self.executor.record_silenced_trade(psi, delta_trade)
-            return {"action": "SILENCE", "reason": reason, "psi": psi, "delta": delta_trade}
+            return {"action": "SILENCE", "reason": reason, "psi": psi, "delta_trade": delta_trade}
 
         p_win, avg_win, avg_loss, kelly_f = self.bayesian.get_edge_params(symbol, strategy)
         e_edge = compute_expected_edge(p_win, avg_win, avg_loss)

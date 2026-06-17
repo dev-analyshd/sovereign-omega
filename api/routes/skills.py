@@ -388,24 +388,41 @@ async def _dispatch_skill(skill_id: str, inp: Dict[str, Any]) -> Dict[str, Any]:
 
 
 async def _skill_coherence_evaluate(inp: Dict) -> Dict:
+    import hashlib
     from core.coherence_engine import CoherenceEngine
     from core.action_gate import ActionGate
+    from reasoning.chain_manager import ChainManager
     engine = CoherenceEngine()
     gate = ActionGate()
+    chain_manager = ChainManager()
     query = inp.get("query", "")
-    context = inp.get("context", {})
+    context = inp.get("context", {}) or {}
     domain = inp.get("domain", "general")
     cycle_id = str(uuid.uuid4())
+    volatility = context.get("volatility", 0.2)
+    novelty = context.get("novelty", 0.5)
 
-    context.setdefault("input_channels", {"query": [min(len(query) / 500.0, 1.0)]})
-    context.setdefault("environmental_signals", {})
-    context.setdefault("volatility", 0.2)
-    context.setdefault("novelty", 0.5)
+    reasoning_chains = await chain_manager.run_chains(query, context)
+
+    qb = query.encode()
+    h1 = hashlib.sha256(qb).digest()
+    h2 = hashlib.sha256(qb + b"b").digest()
+    input_channels = {
+        "query_entropy": [b / 255.0 for b in h1],
+        "context_signals": [b / 255.0 for b in h2[:16]] + [volatility, novelty],
+    }
+
+    context = {
+        **context,
+        "reasoning_chains": reasoning_chains,
+        "input_channels": input_channels,
+        "environmental_signals": context.get("environmental_signals", {}),
+        "volatility": volatility,
+        "novelty": novelty,
+    }
 
     scores = await engine.compute_all_planes(query, context, cycle_id)
     psi = scores["psi_total"]
-    volatility = scores.get("volatility", 0.2)
-    novelty = scores.get("novelty", 0.5)
     delta = gate.compute_threshold(volatility, novelty)
     gate_open = gate.is_open(psi, delta)
 
@@ -444,18 +461,31 @@ async def _skill_trade_evaluate(inp: Dict) -> Dict:
 
 
 async def _skill_silence_check(inp: Dict) -> Dict:
+    import hashlib
     from core.coherence_engine import CoherenceEngine
     from core.action_gate import ActionGate
+    from reasoning.chain_manager import ChainManager
     engine = CoherenceEngine()
     gate = ActionGate()
+    chain_manager = ChainManager()
     action = inp.get("proposed_action", "")
     stakes = inp.get("stakes", 0.5)
+    volatility = stakes
+    novelty = 0.5
 
+    reasoning_chains = await chain_manager.run_chains(action, {})
+    qb = action.encode()
+    h1 = hashlib.sha256(qb).digest()
+    h2 = hashlib.sha256(qb + b"b").digest()
     context = {
-        "input_channels": {"action": [stakes]},
+        "reasoning_chains": reasoning_chains,
+        "input_channels": {
+            "query_entropy": [b / 255.0 for b in h1],
+            "context_signals": [b / 255.0 for b in h2[:16]] + [volatility, novelty],
+        },
         "environmental_signals": {},
-        "volatility": stakes,
-        "novelty": 0.5,
+        "volatility": volatility,
+        "novelty": novelty,
     }
     scores = await engine.compute_all_planes(action, context, str(uuid.uuid4()))
     psi = scores["psi_total"]

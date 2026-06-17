@@ -46,10 +46,30 @@ async def evaluate_action(req: ActionRequest):
     cycle_id = str(uuid.uuid4())
 
     reasoning_chains = await chain_manager.run_chains(req.query, req.context)
+
+    if "input_channels" not in req.context:
+        import hashlib
+        qb = req.query.encode()
+        h1 = hashlib.sha256(qb).digest()
+        h2 = hashlib.sha256(qb + b"b").digest()
+        query_entropy_channel = [b / 255.0 for b in h1]
+        context_channel = [b / 255.0 for b in h2[:16]] + [
+            req.context.get("volatility", 0.3),
+            req.context.get("novelty", 0.5),
+            len(req.query) / 500.0,
+            len(reasoning_chains) / 10.0,
+        ]
+        default_channels = {
+            "query_entropy": query_entropy_channel,
+            "context_signals": context_channel,
+        }
+    else:
+        default_channels = req.context["input_channels"]
+
     context = {
         **req.context,
         "reasoning_chains": reasoning_chains,
-        "input_channels": req.context.get("input_channels", {"query": [len(req.query) / 500.0]}),
+        "input_channels": default_channels,
         "environmental_signals": req.context.get("environmental_signals", {}),
         "volatility": req.context.get("volatility", 0.2),
         "novelty": req.context.get("novelty", 0.5),

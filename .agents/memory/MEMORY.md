@@ -1,1 +1,2 @@
 - [Replit migration fixes](replit-migration.md) — key decisions made during migration from Agent to Replit environment
+- [SOVEREIGN-Ω architecture](sovereign-omega.md) — TRION math, scoring fixes, on-chain setup, skill fixes for Pharos hackathon
