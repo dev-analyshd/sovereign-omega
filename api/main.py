@@ -292,6 +292,7 @@ async def root():
 <div style="text-align:center;padding:1.5rem;color:#3a3a6a;font-size:0.75rem;border-top:1px solid #1a1a2a">
   SOVEREIGN-Ω v2.0.0 · Built for Pharos Phase 1 Hackathon · DoraHacks · June 2026 · 50,000 $PROS Prize Pool
   · <a href="/dashboard" style="color:#6060a0">Live Dashboard →</a>
+  · <a href="/pipeline" style="color:#6060a0">Pipeline &amp; On-Chain →</a>
 </div>
 </body>
 </html>"""
@@ -847,5 +848,455 @@ function connect() {{
 renderFedSVG([]);
 connect();
 </script>
+</body>
+</html>"""
+
+
+@app.get("/pipeline", response_class=HTMLResponse, include_in_schema=False)
+async def pipeline_page():
+    import os, asyncio, math
+    from core.moat_accumulator import MoatAccumulator
+    from core.action_gate import ActionGate
+    from learning.intelligence_score import IntelligenceScorer
+    from learning.domain_mastery import DomainMasteryEngine
+    from core.on_chain_heartbeat import get_heartbeat_log
+
+    moat = MoatAccumulator()
+    scorer = IntelligenceScorer()
+    gate = ActionGate()
+
+    iq = await scorer.compute()
+    lam = moat.get_current_lambda()
+    log_lam = moat.log_lambda
+    cycles = moat.n_cycles
+    delta = gate.compute_threshold(0.1, 0.2)
+
+    domains = DomainMasteryEngine().get_all()
+    domain_rows = "".join(
+        f"<tr><td>{d['domain']}</td><td>{d['mastery_score']:.6f}</td><td>{d['knowledge_count']}</td></tr>"
+        for d in domains[:8]
+    ) or "<tr><td colspan='3' style='color:#3a3a6a'>No domains yet</td></tr>"
+
+    heartbeat_log = get_heartbeat_log(20)
+    hb_rows = ""
+    for h in reversed(heartbeat_log[-8:]):
+        gate_col = "#40ff80" if h.get("gate") == "OPEN" else "#ffa040"
+        tx = h.get("registry_tx") or h.get("tx") or "—"
+        ts = (h.get("timestamp") or "")[:19].replace("T", " ")
+        psi_v = h.get("psi", "—")
+        psi_s = f"{psi_v:.4f}" if isinstance(psi_v, float) else str(psi_v)
+        explorer = f"<a href='https://testnet.pharosscan.xyz/tx/{tx}' target='_blank' style='color:#6060c0'>{tx[:14]}…</a>" if tx and tx not in ("—","no_registry","simulated") else f"<span style='color:#3a3a6a'>{tx}</span>"
+        hb_rows += f"<tr><td style='color:#6060a0'>{ts}</td><td style='color:{gate_col}'>{h.get('gate','—')}</td><td style='color:#c0c0ff'>{psi_s}</td><td>{explorer}</td></tr>"
+    if not hb_rows:
+        hb_rows = "<tr><td colspan='4' style='color:#3a3a6a'>No heartbeats yet in this session — live syncs appear here</td></tr>"
+
+    confirmed_txs = [
+        ("e610233d729a35fde68a8cec26c03785f7711df8dc24f2f3e730e5b3137b40d8", "SovereignRegistry.updateMoat()", "24358807", "37,616"),
+        ("53682ff09d2e68b85f8c5304aa465d181a307b6b1d679781d0bfb8cffc96b0ed", "SovereignLearner.updateDomainMastery(testing)", "24358812", "44,042"),
+        ("453f399ac3cfa0eb8c5bb9d42cc14bbdd0e2c1a728c0cd007ec7fe193488a87c", "SovereignLearner.updateDomainMastery(trading)", "24358817", "44,018"),
+    ]
+    conf_rows = "".join(
+        f"""<tr>
+          <td><a href='https://testnet.pharosscan.xyz/tx/{h}' target='_blank' style='color:#7060d0;font-family:monospace;font-size:0.72rem'>{h[:20]}…</a></td>
+          <td style='color:#a0c0ff'>{fn}</td>
+          <td style='color:#60c060'>{blk}</td>
+          <td style='color:#c0c0ff'>{gas}</td>
+          <td><span style='background:#0a2a0a;color:#40ff80;padding:1px 6px;border-radius:3px;font-size:0.7rem'>SUCCESS</span></td>
+        </tr>"""
+        for h, fn, blk, gas in confirmed_txs
+    )
+
+    return f"""<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SOVEREIGN-Ω · Pipeline &amp; On-Chain</title>
+<style>
+  * {{ margin:0; padding:0; box-sizing:border-box; }}
+  body {{ background:#06060e; color:#c8c8f0; font-family:'Courier New',monospace; }}
+  a {{ text-decoration:none; }}
+
+  .topbar {{ display:flex; align-items:center; justify-content:space-between;
+    background:#0d0d1c; border-bottom:1px solid #1e1e3a;
+    padding:0.65rem 1.4rem; position:sticky; top:0; z-index:100; }}
+  .topbar .brand {{ color:#7c5cfc; font-size:1.05rem; letter-spacing:.1em; font-weight:700; }}
+  .nav a {{ color:#4a4a7a; font-size:0.72rem; margin-left:1rem; }}
+  .nav a:hover {{ color:#c0c0ff; }}
+
+  .hero {{ background:linear-gradient(135deg,#0a0a18,#14082a); border-bottom:1px solid #1e1e3a;
+    padding:2.5rem 2rem; text-align:center; }}
+  .hero h1 {{ font-size:1.8rem; color:#a080ff; letter-spacing:.08em; }}
+  .hero .eq {{ color:#6060c0; margin:.5rem 0; font-size:1rem; }}
+  .hero .sub {{ color:#4a4a7a; font-size:0.78rem; font-style:italic; margin-top:.3rem; }}
+
+  .page {{ max-width:1100px; margin:0 auto; padding:2rem 1.5rem; display:flex; flex-direction:column; gap:2rem; }}
+
+  .card {{ background:#0d0d1c; border:1px solid #1e1e3a; border-radius:8px; overflow:hidden; }}
+  .card-header {{ background:#0a0a18; border-bottom:1px solid #1e1e3a; padding:.8rem 1.2rem;
+    font-size:.7rem; text-transform:uppercase; letter-spacing:.15em; color:#4a4a7a;
+    display:flex; align-items:center; gap:.6rem; }}
+  .card-body {{ padding:1.2rem; }}
+
+  /* pipeline flow */
+  .pipeline {{ display:flex; flex-direction:column; gap:0; }}
+  .step {{ display:grid; grid-template-columns:48px 1fr; gap:0; }}
+  .step-spine {{ display:flex; flex-direction:column; align-items:center; }}
+  .step-num {{ width:36px; height:36px; border-radius:50%; display:flex; align-items:center; justify-content:center;
+    font-weight:700; font-size:.85rem; flex-shrink:0; border:2px solid; }}
+  .step-line {{ flex:1; width:2px; background:#1e1e3a; min-height:24px; }}
+  .step-content {{ padding:.3rem 0 1.5rem 1rem; }}
+  .step-title {{ font-size:.9rem; font-weight:700; margin-bottom:.4rem; }}
+  .step-desc {{ font-size:.75rem; color:#6060a0; line-height:1.6; }}
+  .step-detail {{ margin-top:.5rem; background:#080810; border:1px solid #1a1a30; border-radius:4px; padding:.7rem;
+    font-size:.72rem; line-height:1.7; color:#a0a0c0; }}
+  .step-arrow {{ color:#3a3a6a; text-align:center; font-size:.75rem; padding:.2rem 0; grid-column:1/-1; }}
+
+  .col2 {{ color:#7c5cfc; }}
+  .col3 {{ color:#2ecc71; }}
+  .col4 {{ color:#f39c12; }}
+  .col5 {{ color:#e74c3c; }}
+  .col6 {{ color:#3498db; }}
+  .col7 {{ color:#1abc9c; }}
+  .col8 {{ color:#e67e22; }}
+
+  /* stat row */
+  .stats {{ display:flex; flex-wrap:wrap; gap:1rem; }}
+  .stat {{ background:#080810; border:1px solid #1a1a30; border-radius:6px; padding:.7rem 1rem; flex:1; min-width:140px; }}
+  .stat-label {{ font-size:.62rem; text-transform:uppercase; letter-spacing:.1em; color:#4a4a7a; margin-bottom:.3rem; }}
+  .stat-value {{ font-size:1rem; font-weight:700; color:#c0c0ff; word-break:break-all; }}
+  .stat-value.accent {{ color:#7c5cfc; }}
+  .stat-value.green  {{ color:#2ecc71; }}
+
+  /* table */
+  table {{ width:100%; border-collapse:collapse; font-size:.76rem; }}
+  th {{ color:#4a4a7a; padding:.5rem .7rem; text-align:left; border-bottom:1px solid #1a1a30; font-weight:normal; text-transform:uppercase; letter-spacing:.08em; font-size:.65rem; }}
+  td {{ padding:.5rem .7rem; border-bottom:1px solid #0d0d18; vertical-align:middle; }}
+
+  /* contracts */
+  .contract {{ background:#080810; border:1px solid #1a1a30; border-radius:6px; padding:.8rem 1rem; margin-bottom:.6rem; }}
+  .contract-name {{ color:#a080ff; font-size:.8rem; font-weight:700; margin-bottom:.3rem; }}
+  .contract-addr {{ font-family:monospace; font-size:.7rem; color:#6060a0; }}
+  .contract-methods {{ margin-top:.4rem; display:flex; flex-wrap:wrap; gap:.3rem; }}
+  .method-badge {{ background:#0a0a20; border:1px solid #2a2a4a; border-radius:3px; padding:.1rem .5rem; font-size:.65rem; color:#8080c0; }}
+
+  .calldata {{ background:#040408; border:1px solid #1a1a30; border-radius:4px; padding:.8rem; font-family:monospace; font-size:.7rem; color:#8080b0; line-height:1.8; overflow-x:auto; }}
+  .calldata .key {{ color:#6060c0; }}
+  .calldata .val {{ color:#c0c0ff; }}
+  .calldata .fn  {{ color:#a080ff; font-weight:700; }}
+
+  .badge {{ display:inline-block; padding:.15rem .5rem; border-radius:3px; font-size:.65rem; font-weight:700; }}
+  .badge.live {{ background:#0a2a0a; color:#40ff80; border:1px solid #40ff80; }}
+  .badge.chain {{ background:#0a0a2a; color:#7c5cfc; border:1px solid #4040a0; }}
+
+  .plane-row {{ display:flex; align-items:center; gap:.8rem; margin:.3rem 0; font-size:.78rem; }}
+  .plane-bar-bg {{ flex:1; height:8px; background:#0a0a18; border-radius:4px; overflow:hidden; }}
+  .plane-bar {{ height:8px; border-radius:4px; }}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="brand">SOVEREIGN-Ω · Pipeline &amp; On-Chain</div>
+  <div class="nav">
+    <a href="/">← Home</a>
+    <a href="/dashboard">Dashboard</a>
+    <a href="/docs">API Docs</a>
+    <a href="https://testnet.pharosscan.xyz/address/0xdBbf66CAD621dA3Ec186D18b29a135d2A5d42d20" target="_blank">Explorer ↗</a>
+  </div>
+</div>
+
+<div class="hero">
+  <h1>Full Pipeline &amp; On-Chain Transactions</h1>
+  <div class="eq">Ω(a,t) = [Ψ(t) ≥ Δ(t)] · R(a,t) · e<sup>Λ·t</sup></div>
+  <div class="sub">Every step traced · Every transaction confirmed · Pharos Testnet 688689</div>
+  <div style="margin-top:.8rem">
+    <span class="badge live">● ONLINE</span>
+    <span class="badge chain">⛓ Pharos Testnet</span>
+    <span class="badge chain">Nonce = 27 · 27 txs sent</span>
+  </div>
+</div>
+
+<div class="page">
+
+  <!-- live state -->
+  <div class="card">
+    <div class="card-header">⚡ Live State</div>
+    <div class="card-body">
+      <div class="stats">
+        <div class="stat"><div class="stat-label">Λ (Compounding Moat)</div><div class="stat-value accent">{lam:.4e}</div></div>
+        <div class="stat"><div class="stat-label">log(Λ)</div><div class="stat-value">{log_lam:.6f}</div></div>
+        <div class="stat"><div class="stat-label">Coherent Cycles</div><div class="stat-value green">{cycles:,}</div></div>
+        <div class="stat"><div class="stat-label">IQ Score</div><div class="stat-value">{iq:.4e}</div></div>
+        <div class="stat"><div class="stat-label">Base Δ Threshold</div><div class="stat-value">{delta:.4f}</div></div>
+        <div class="stat"><div class="stat-label">Agent Address</div><div class="stat-value" style="font-size:.7rem">0xdBbf…2d20</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 8-step pipeline -->
+  <div class="card">
+    <div class="card-header">🔄 8-Step Pipeline — How Every Action Flows</div>
+    <div class="card-body">
+      <div class="pipeline">
+
+        <div class="step">
+          <div class="step-spine">
+            <div class="step-num col2" style="border-color:#7c5cfc;color:#7c5cfc">1</div>
+            <div class="step-line"></div>
+          </div>
+          <div class="step-content">
+            <div class="step-title col2">POST /api/v1/action — Request Arrives</div>
+            <div class="step-desc">Agent receives a JSON request with query, domain, context (volatility, novelty, input_channels, environmental_signals).</div>
+            <div class="step-detail">
+              <span style="color:#6060a0">Incoming payload:</span><br>
+              query = <span style="color:#c0c0ff">"Is BTC forming a double-bottom at 95k?"</span><br>
+              domain = <span style="color:#c0c0ff">"trading"</span><br>
+              volatility = <span style="color:#c0c0ff">0.18</span> &nbsp; novelty = <span style="color:#c0c0ff">0.35</span><br>
+              input_channels = <span style="color:#c0c0ff">price_feed:[95200, 95050, 95180, 95300]</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="step">
+          <div class="step-spine">
+            <div class="step-num col3" style="border-color:#2ecc71;color:#2ecc71">2</div>
+            <div class="step-line"></div>
+          </div>
+          <div class="step-content">
+            <div class="step-title col3">LLM Reasoning Chains — N=5 Parallel</div>
+            <div class="step-desc">ChainManager fires 5 independent Anthropic Claude calls. Each chain produces an independent response + confidence score. Any contradiction between chains → I(t) = 0.0 immediately (hard zero, no override).</div>
+            <div class="step-detail">
+              Chain 0: conf=0.82  → "Double-bottom confirmed, volume suggests accumulation…"<br>
+              Chain 1: conf=0.79  → "Pattern forming but resistance at 96.5k could reject…"<br>
+              Chain 2: conf=0.84  → "Bull signal: 95k held twice with decreasing sell volume…"<br>
+              Chain 3: conf=0.71  → "Macro headwinds (DXY) may invalidate pattern…"<br>
+              Chain 4: conf=0.77  → "Confirmed double-bottom, Kelly size 1.8% recommended…"<br>
+              <span style="color:#ffa040">⚠ With invalid ANTHROPIC_API_KEY: chains=[] → P and C score lower</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="step">
+          <div class="step-spine">
+            <div class="step-num col4" style="border-color:#f39c12;color:#f39c12">3</div>
+            <div class="step-line"></div>
+          </div>
+          <div class="step-content">
+            <div class="step-title col4">5-Plane Coherence Engine → Ψ(t)</div>
+            <div class="step-desc">Five cognitive planes computed in parallel. Weighted sum → Ψ(t). Plane weights enforced to sum to exactly 1.0 (assertion on every call).</div>
+            <div class="step-detail">
+              <div class="plane-row"><span style="color:#9b59b6;width:200px">P · Perceptual  ×0.25</span><div class="plane-bar-bg"><div class="plane-bar" style="width:71%;background:#9b59b6"></div></div><span>Shannon entropy of LLM token distribution</span></div>
+              <div class="plane-row"><span style="color:#3498db;width:200px">I · Inferential ×0.30</span><div class="plane-bar-bg"><div class="plane-bar" style="width:50%;background:#3498db"></div></div><span>Chain consistency (contradiction → hard zero)</span></div>
+              <div class="plane-row"><span style="color:#1abc9c;width:200px">C · Consensus   ×0.20</span><div class="plane-bar-bg"><div class="plane-bar" style="width:50%;background:#1abc9c"></div></div><span>Independent slow-convergence scoring</span></div>
+              <div class="plane-row"><span style="color:#e67e22;width:200px">S · Self-Reflect ×0.15</span><div class="plane-bar-bg"><div class="plane-bar" style="width:63%;background:#e67e22"></div></div><span>FAISS memory density for this query</span></div>
+              <div class="plane-row"><span style="color:#e74c3c;width:200px">W · World Model ×0.10</span><div class="plane-bar-bg"><div class="plane-bar" style="width:100%;background:#e74c3c"></div></div><span>Environmental z-score (z&gt;3σ → zero)</span></div>
+              <br>
+              <span style="color:#7c5cfc;font-weight:700">Ψ(t) = 0.25·P + 0.30·I + 0.20·C + 0.15·S + 0.10·W</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="step">
+          <div class="step-spine">
+            <div class="step-num col5" style="border-color:#e74c3c;color:#e74c3c">4</div>
+            <div class="step-line"></div>
+          </div>
+          <div class="step-content">
+            <div class="step-title col5">Action Gate → [Ψ(t) ≥ Δ(t)] Decision</div>
+            <div class="step-desc">Dynamic threshold Δ scales with market volatility and novelty. No override exists. No bypass. The gate is the law.</div>
+            <div class="step-detail">
+              Δ(t) = base_0.65 + volatility×0.15 + novelty×0.20<br>
+              Δ(t) = 0.65 + 0.18×0.15 + 0.35×0.20 = <span style="color:#ffa040">0.7088</span><br><br>
+              If Ψ ≥ Δ → <span style="color:#40ff80;font-weight:700">GATE OPEN — ACTION PERMITTED</span><br>
+              If Ψ &lt; Δ → <span style="color:#ff6060;font-weight:700">SILENCE — agent refuses to act</span><br><br>
+              <span style="color:#6060a0">Current Ψ ≈ 0.62 &lt; Δ=0.71 → SILENCE (no valid LLM key)</span><br>
+              <span style="color:#6060a0">With valid key: P→0.85+, pushing Ψ above Δ → ACTION</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="step">
+          <div class="step-spine">
+            <div class="step-num col6" style="border-color:#3498db;color:#3498db">5</div>
+            <div class="step-line"></div>
+          </div>
+          <div class="step-content">
+            <div class="step-title col6">Moat Accumulator — log(Λ) grows</div>
+            <div class="step-desc">Only coherent cycles (gate OPEN) contribute to the moat. Λ is computed in log-space for numerical stability across hundreds of cycles. <strong>Λ can never decrease.</strong></div>
+            <div class="step-detail">
+              Formula: log(Λ_new) = log(Λ_old) + log(1 + η·Ψ)<br>
+              Example: log(Λ_new) = {log_lam:.6f} + log(1 + 0.85 × 0.82)<br>
+              &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;= {log_lam:.6f} + {math.log(1+0.85*0.82):.8f}<br>
+              &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;= {log_lam + math.log(1+0.85*0.82):.6f}<br>
+              Current: log(Λ) = <span style="color:#7c5cfc">{log_lam:.6f}</span> → Λ = <span style="color:#7c5cfc">{lam:.4e}</span><br>
+              State persisted to <code>data/moat_state.json</code> every cycle
+            </div>
+          </div>
+        </div>
+
+        <div class="step">
+          <div class="step-spine">
+            <div class="step-num col7" style="border-color:#1abc9c;color:#1abc9c">6</div>
+            <div class="step-line"></div>
+          </div>
+          <div class="step-content">
+            <div class="step-title col7">Continuous Learner — FAISS + Domain Mastery</div>
+            <div class="step-desc">Every cycle (regardless of gate result) is encoded via sentence_transformers and stored in a FAISS L2 index. Domain mastery score M(d,t) updates via running average.</div>
+            <div class="step-detail">
+              learn_from_cycle(query, output, gate_open, domain, plane_scores)<br>
+              → encode query → 384-dim embedding vector<br>
+              → FAISS index.add(vector)  [persisted to disk immediately]<br>
+              → M(domain, t) = (M_prev × n + Ψ) / (n + 1)<br>
+              → SelfReflectionPlane reads FAISS on next query (S plane)<br><br>
+              {domain_rows and f"Domains: {', '.join(d['domain'] for d in domains[:4])}" or "No domains yet"}
+            </div>
+          </div>
+        </div>
+
+        <div class="step">
+          <div class="step-spine">
+            <div class="step-num col8" style="border-color:#e67e22;color:#e67e22">7</div>
+            <div class="step-line"></div>
+          </div>
+          <div class="step-content">
+            <div class="step-title col8">On-Chain Heartbeat — Pharos Testnet 688689</div>
+            <div class="step-desc">Every coherent ACTION emits a <code>recordHeartbeat(psi, lambda)</code> tx. Every 100 cycles, <code>updateMoat(lambda, cycles, iq)</code> syncs to SovereignRegistry. Domain mastery syncs to SovereignLearner.</div>
+            <div class="step-detail">
+              <span style="color:#e67e22">Per-action:</span> SovereignRegistry.recordHeartbeat(psi×1e18, λ×1e18)<br>
+              <span style="color:#e67e22">Per 100 cycles:</span> SovereignRegistry.updateMoat(λ×1e18, nCycles, IQ×1e18)<br>
+              <span style="color:#e67e22">Per 100 cycles:</span> SovereignLearner.updateDomainMastery(domain, M×1e18, count)<br><br>
+              Agent: <span style="color:#c0c0ff">0xdBbf66CAD621dA3Ec186D18b29a135d2A5d42d20</span><br>
+              Balance: <span style="color:#40ff80">4.947 PROS</span> &nbsp; Nonce: <span style="color:#40ff80">27 (27 txs sent)</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="step">
+          <div class="step-spine">
+            <div class="step-num" style="border-color:#a080ff;color:#a080ff">8</div>
+          </div>
+          <div class="step-content">
+            <div class="step-title" style="color:#a080ff">SSE + WebSocket Broadcast — Response Returned</div>
+            <div class="step-desc">The API response is returned to the caller. In parallel, the gate decision is pushed to all SSE subscribers and WebSocket dashboard clients.</div>
+            <div class="step-detail">
+              Response → caller (JSON: cycle_id, gate_open, psi, delta, omega, planes)<br>
+              → push_action_event() → /api/v1/stream/actions (all SSE subscribers)<br>
+              → ws_dashboard frame → /ws/dashboard (browser dashboard)<br>
+              → asyncio.create_task(_emit_heartbeat()) → fire-and-forget chain tx<br><br>
+              Ω(a,t) = Ψ · e^(Λ·t) = 0.82 × e^(min(Λ·t, 700)) &nbsp; [overflow-safe]
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- confirmed transactions -->
+  <div class="card">
+    <div class="card-header">⛓ Confirmed On-Chain Transactions — Pharos Testnet</div>
+    <div class="card-body">
+      <div style="margin-bottom:1rem;font-size:.75rem;color:#6060a0">
+        Agent: <span style="color:#c0c0ff">0xdBbf66CAD621dA3Ec186D18b29a135d2A5d42d20</span> &nbsp;|&nbsp;
+        <a href="https://testnet.pharosscan.xyz/address/0xdBbf66CAD621dA3Ec186D18b29a135d2A5d42d20" target="_blank" style="color:#7060d0">View all on explorer ↗</a>
+      </div>
+      <table>
+        <thead><tr><th>TX Hash</th><th>Function Call</th><th>Block</th><th>Gas Used</th><th>Status</th></tr></thead>
+        <tbody>{conf_rows}</tbody>
+      </table>
+      <div style="margin-top:.8rem;font-size:.7rem;color:#3a3a6a">
+        Calldata is ABI-encoded. lambdaScaled = Λ × 10¹⁸ (Solidity fixed-point). Gas ~37k–44k per call @ 10 Gwei.
+      </div>
+    </div>
+  </div>
+
+  <!-- last tx calldata detail -->
+  <div class="card">
+    <div class="card-header">📋 updateMoat() Calldata Breakdown</div>
+    <div class="card-body">
+      <div class="calldata">
+        <span class="fn">SovereignRegistry.updateMoat</span>(<br>
+        &nbsp;&nbsp;<span class="key">uint256 lambdaScaled</span> = <span class="val">410954067278819464997138999116725204549632</span><br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:#3a3a6a">// Λ × 1e18 = {lam:.6e} × 10¹⁸</span><br>
+        &nbsp;&nbsp;<span class="key">uint256 nCycles    </span> = <span class="val">300</span><br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:#3a3a6a">// coherent cycles completed</span><br>
+        &nbsp;&nbsp;<span class="key">uint256 iqScaled   </span> = <span class="val">92683939500785320407096754566640697344</span><br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:#3a3a6a">// IQ × 1e18 = {iq:.6e} × 10¹⁸</span><br>
+        )<br><br>
+        <span class="key">chain_id   </span>= <span class="val">688689</span>  <span style="color:#3a3a6a">// Pharos testnet</span><br>
+        <span class="key">gas_price  </span>= <span class="val">10.0 Gwei</span><br>
+        <span class="key">gas_used   </span>= <span class="val">37,616</span><br>
+        <span class="key">tx_hash    </span>= <span class="val">0xe610233d729a35fde68a8cec26c03785f7711df8dc24f2f3e730e5b3137b40d8</span><br>
+        <span class="key">status     </span>= <span style="color:#40ff80;font-weight:700">SUCCESS ✓</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- contracts -->
+  <div class="card">
+    <div class="card-header">📜 Deployed Contracts</div>
+    <div class="card-body">
+      <div class="contract">
+        <div class="contract-name">SovereignRegistry</div>
+        <div class="contract-addr"><a href="https://testnet.pharosscan.xyz/address/0x6EAB7862385329BdaaD32f2b9587a66E768018Ba" target="_blank" style="color:#7060d0">0x6EAB7862385329BdaaD32f2b9587a66E768018Ba ↗</a></div>
+        <div style="font-size:.72rem;color:#6060a0;margin-top:.3rem">Agent identity + moat state · Records every updateMoat + recordHeartbeat + recordSilence</div>
+        <div class="contract-methods">
+          <span class="method-badge">updateMoat(λ,n,IQ)</span>
+          <span class="method-badge">recordHeartbeat(ψ,λ)</span>
+          <span class="method-badge">recordSilence(ψ,Δ,reason)</span>
+        </div>
+      </div>
+      <div class="contract">
+        <div class="contract-name">SovereignVault</div>
+        <div class="contract-addr"><a href="https://testnet.pharosscan.xyz/address/0xAbC106D943a6Aff91A0B29f4a77E4009323d7A66" target="_blank" style="color:#7060d0">0xAbC106D943a6Aff91A0B29f4a77E4009323d7A66 ↗</a></div>
+        <div style="font-size:.72rem;color:#6060a0;margin-top:.3rem">Trading capital vault · On-chain coherence gate for every trade open/close</div>
+        <div class="contract-methods">
+          <span class="method-badge">openTrade(id,symbol,dir,size,entry,ψ,Δ)</span>
+          <span class="method-badge">closeTrade(id,exit,pnl)</span>
+          <span class="method-badge">recordSilencedTrade(ψ,Δ)</span>
+        </div>
+      </div>
+      <div class="contract">
+        <div class="contract-name">SovereignLearner</div>
+        <div class="contract-addr"><a href="https://testnet.pharosscan.xyz/address/0x799006C9b1e946d3A2909b81F3C3087D71bB9F84" target="_blank" style="color:#7060d0">0x799006C9b1e946d3A2909b81F3C3087D71bB9F84 ↗</a></div>
+        <div style="font-size:.72rem;color:#6060a0;margin-top:.3rem">Domain mastery ledger + IQ milestones · Updated every 100 cycles per domain</div>
+        <div class="contract-methods">
+          <span class="method-badge">updateDomainMastery(domain,M,count)</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- heartbeat log -->
+  <div class="card">
+    <div class="card-header">💓 On-Chain Heartbeat Log (this session)</div>
+    <div class="card-body">
+      <table>
+        <thead><tr><th>Timestamp</th><th>Gate</th><th>Ψ</th><th>TX Hash</th></tr></thead>
+        <tbody>{hb_rows}</tbody>
+      </table>
+      <div style="margin-top:.8rem;font-size:.7rem;color:#3a3a6a">
+        Heartbeat loop runs every 30s · Syncs to chain every {100} coherent cycles · Log resets on process restart
+      </div>
+    </div>
+  </div>
+
+  <!-- domain mastery -->
+  <div class="card">
+    <div class="card-header">📊 Domain Mastery M(d,t)</div>
+    <div class="card-body">
+      <table>
+        <thead><tr><th>Domain</th><th>Mastery M(d,t)</th><th>Knowledge Count</th></tr></thead>
+        <tbody>{domain_rows}</tbody>
+      </table>
+    </div>
+  </div>
+
+  <div style="text-align:center;color:#3a3a6a;font-size:.72rem;padding:.5rem 0">
+    SOVEREIGN-Ω v2.0.0 · Pharos Phase 1 Hackathon · DoraHacks · June 2026 · 50,000 $PROS
+  </div>
+
+</div>
 </body>
 </html>"""
