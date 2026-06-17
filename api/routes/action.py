@@ -2,24 +2,38 @@ import math
 import uuid
 from fastapi import APIRouter
 from api.schemas import ActionRequest, ActionResponse
-from core.coherence_engine import CoherenceEngine
-from core.action_gate import ActionGate
-from core.moat_accumulator import MoatAccumulator
-from core.silence_protocol import SilenceProtocol
-from reasoning.chain_manager import ChainManager
-from learning.continuous_learner import ContinuousLearner
 
 router = APIRouter()
-coherence_engine = CoherenceEngine()
-action_gate = ActionGate()
-moat_acc = MoatAccumulator()
-silence_protocol = SilenceProtocol()
-chain_manager = ChainManager()
-learner = ContinuousLearner()
+
+_coherence_engine = None
+_action_gate = None
+_moat_acc = None
+_silence_protocol = None
+_chain_manager = None
+_learner = None
+
+
+def _get_components():
+    global _coherence_engine, _action_gate, _moat_acc, _silence_protocol, _chain_manager, _learner
+    if _coherence_engine is None:
+        from core.coherence_engine import CoherenceEngine
+        from core.action_gate import ActionGate
+        from core.moat_accumulator import MoatAccumulator
+        from core.silence_protocol import SilenceProtocol
+        from reasoning.chain_manager import ChainManager
+        from learning.continuous_learner import ContinuousLearner
+        _coherence_engine = CoherenceEngine()
+        _action_gate = ActionGate()
+        _moat_acc = MoatAccumulator()
+        _silence_protocol = SilenceProtocol()
+        _chain_manager = ChainManager()
+        _learner = ContinuousLearner()
+    return _coherence_engine, _action_gate, _moat_acc, _silence_protocol, _chain_manager, _learner
 
 
 @router.post("/action", response_model=ActionResponse)
 async def evaluate_action(req: ActionRequest):
+    coherence_engine, action_gate, moat_acc, silence_protocol, chain_manager, learner = _get_components()
     cycle_id = str(uuid.uuid4())
 
     reasoning_chains = await chain_manager.run_chains(req.query, req.context)
