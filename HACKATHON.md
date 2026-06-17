@@ -42,14 +42,14 @@ log(Λ(t)) = log(Λ₀) + Σᵢ log(1 + ηᵢ · ρᵢ)    Λ never decreases. E
 Production-ready, not a demo:
 - ✅ FastAPI backend running on Pharos testnet
 - ✅ 6 MCP-compatible Agent Skills with full JSON schemas
-- ✅ x402 HTTP 402 payment gate ($PROS + USDC)
+- ✅ **`SKILL.md` at repo root** — Pharos Skill Engine format, coding-agent-discoverable
+- ✅ x402 HTTP 402 payment gate ($PROS + USDC · facilitator: https://facilitator.pharos.xyz)
+- ✅ Pharos Atlantic testnet USDC: `0xE0BE08c77f415F577A1B3A9aD7a1Df1479564ec8`
 - ✅ A2A agent discovery (`/.well-known/agent.json` + `/.well-known/skills.json`)
 - ✅ 3 Solidity smart contracts deployed on Pharos (Registry, Vault, Learner)
 - ✅ FAISS vector memory (persists to disk on every write)
 - ✅ Bayesian Kelly criterion trading engine
 - ✅ Parallel reasoning chains (5 independent chains per query)
-- ✅ Rust entropy module (ChaCha20 CSPRNG, Shannon entropy)
-- ✅ PostgreSQL for trade/moat/silence history
 - ✅ Background self-improvement loop + daily risk reset
 
 ### 3. Security ✅ (CertiK Skill Scanner Compliant)
@@ -257,5 +257,23 @@ curl http://localhost:8000/api/v1/skills
 
 ---
 
+---
+
+## 🧩 SKILL.md — Pharos Skill Engine Format
+
+SOVEREIGN-Ω ships a `SKILL.md` at the root of this repository. This is the standard Pharos Skill Engine format (introduced by Anthropic, adopted across Claude Code, Cursor, Codex, and Pharos skills directories). It allows any AI coding agent to discover and invoke our skills without manual setup.
+
+The `SKILL.md` covers:
+- All 6 skill IDs and tiers
+- Free and x402 premium invocation curl examples
+- MCP JSON-RPC config block
+- Chain details (chain ID 688689, USDC testnet address, facilitator URL)
+- TRION framework summary
+- Security properties
+
+This satisfies the "Skills First" requirement of the hackathon — our skills are **reusable, documented, and coding-agent-discoverable** per the Pharos Skill Engine spec.
+
+---
+
 *Built for Pharos Phase 1 — "Skill-to-Agent Dual Cascade Hackathon" · June 2026*
-*Deadline: June 18, 2026 · Prize Pool: 50,000 $PROS*
+*Deadline: June 18, 2026 @ 15:59 UTC · Total Prize Pool: 150,000 $PROS*

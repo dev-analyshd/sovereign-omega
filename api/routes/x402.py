@@ -18,14 +18,14 @@ router = APIRouter()
 # x402 Config
 # ---------------------------------------------------------------------------
 PHAROS_NETWORK = os.getenv("PHAROS_NETWORK", "testnet")
-FACILITATOR_URL = "https://x402.pharos.xyz/facilitator"
+FACILITATOR_URL = "https://facilitator.pharos.xyz"
 
 PAYMENT_TARGETS = {
     "testnet": {
         "chain_id": 688689,
         "rpc": "https://atlantic.dplabs-internal.com",
         "pros_address": "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE",  # native PROS
-        "usdc_address": "0x0000000000000000000000000000000000000000",   # fill after deploy
+        "usdc_address": "0xE0BE08c77f415F577A1B3A9aD7a1Df1479564ec8",   # Pharos Atlantic testnet USDC
     },
     "mainnet": {
         "chain_id": 1672,

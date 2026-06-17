@@ -31,8 +31,9 @@ SKILLS_MANIFEST = {
     "chain_id_mainnet": 1672,
     "x402_enabled": True,
     "x402_accepted_tokens": ["PROS", "USDC"],
-    "x402_facilitator": "https://x402.pharos.xyz/facilitator",
-    "certik_scan": True,
+    "x402_facilitator": "https://facilitator.pharos.xyz",
+    "certik_scan_compliant": True,
+    "certik_scan_submitted": False,
     "skills": [
         {
             "id": "coherence_evaluate",

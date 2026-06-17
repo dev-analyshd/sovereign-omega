@@ -290,7 +290,7 @@ async def root():
 </div>
 
 <div style="text-align:center;padding:1.5rem;color:#3a3a6a;font-size:0.75rem;border-top:1px solid #1a1a2a">
-  SOVEREIGN-Ω v2.0.0 · Built for Pharos Phase 1 Hackathon · DoraHacks · June 2026 · 50,000 $PROS Prize Pool
+  SOVEREIGN-Ω v2.0.0 · Built for Pharos Phase 1 Hackathon · DoraHacks · June 2026 · 150,000 $PROS Prize Pool
   · <a href="/dashboard" style="color:#6060a0">Live Dashboard →</a>
   · <a href="/pipeline" style="color:#6060a0">Pipeline &amp; On-Chain →</a>
 </div>

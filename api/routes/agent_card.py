@@ -71,11 +71,12 @@ def _agent_card() -> dict:
         "x402": {
             "enabled": True,
             "accepted_tokens": ["PROS", "USDC"],
-            "facilitator": "https://x402.pharos.xyz/facilitator",
+            "facilitator": "https://facilitator.pharos.xyz",
             "network": os.getenv("PHAROS_NETWORK", "testnet"),
         },
         "security": {
-            "certik_scan": True,
+            "certik_scan_compliant": True,
+            "certik_scan_submitted": False,
             "silence_protocol": True,
             "coherence_gated": True,
             "private_key_env_only": True,
