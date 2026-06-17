@@ -45,6 +45,8 @@ class SelfReflectionPlane:
         densities = []
         for vec in self.past_embeddings[-100:]:
             v = np.array(vec)
+            if v.shape != q.shape:
+                continue
             dist_sq = float(np.sum((q - v) ** 2))
             density = math.exp(-dist_sq / (2 * self.SIGMA ** 2))
             densities.append(density)
@@ -68,7 +70,13 @@ class SelfReflectionPlane:
 
     def _fallback_embed(self, text: str) -> List[float]:
         import hashlib
-        h = hashlib.sha256(text.encode()).digest()
-        vec = [(b / 255.0) * 2 - 1 for b in h]
+        DIM = 384
+        h1 = hashlib.sha256(text.encode()).digest()
+        h2 = hashlib.sha256((text + "b").encode()).digest()
+        h3 = hashlib.sha256((text + "c").encode()).digest()
+        raw = list(h1) + list(h2) + list(h3)
+        vec = [(b / 255.0) * 2 - 1 for b in raw[:DIM]]
+        while len(vec) < DIM:
+            vec.append(0.0)
         norm = math.sqrt(sum(x ** 2 for x in vec))
         return [x / norm for x in vec] if norm > 0 else vec

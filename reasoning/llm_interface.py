@@ -22,10 +22,14 @@ class LLMInterface:
         if ANTHROPIC_AVAILABLE:
             base_url = os.getenv("AI_INTEGRATIONS_ANTHROPIC_BASE_URL")
             api_key = os.getenv("AI_INTEGRATIONS_ANTHROPIC_API_KEY") or os.getenv("ANTHROPIC_API_KEY")
-            kwargs = {"api_key": api_key} if api_key else {}
-            if base_url:
-                kwargs["base_url"] = base_url
-            self.client = anthropic.AsyncAnthropic(**kwargs)
+            if not api_key:
+                print("[LLM] No API key found — using mock reasoning mode")
+                self.client = None
+            else:
+                kwargs = {"api_key": api_key}
+                if base_url:
+                    kwargs["base_url"] = base_url
+                self.client = anthropic.AsyncAnthropic(**kwargs)
         else:
             self.client = None
 

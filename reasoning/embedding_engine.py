@@ -3,9 +3,10 @@ import math
 import os
 from typing import List
 
+_MODEL = None
+
 try:
     from sentence_transformers import SentenceTransformer
-    _MODEL = None
     TRANSFORMERS_AVAILABLE = True
 except ImportError:
     TRANSFORMERS_AVAILABLE = False

@@ -88,7 +88,7 @@ SOVEREIGN-Ω exposes a full MCP JSON-RPC 2.0 endpoint at `/mcp`:
 {
   "mcpServers": {
     "sovereign-omega": {
-      "url": "https://<agent-host>/mcp",
+      "url": "https://<agent-host>/api/v1/mcp",
       "transport": "http"
     }
   }
