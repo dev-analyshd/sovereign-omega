@@ -1,9 +1,18 @@
+import asyncio
 import math
 import uuid
 from fastapi import APIRouter
 from api.schemas import ActionRequest, ActionResponse
 
 router = APIRouter()
+
+
+async def _emit_heartbeat(cycle_id: str, psi: float, gate_open: bool, lambda_val: float):
+    try:
+        from core.on_chain_heartbeat import emit_action_heartbeat
+        await emit_action_heartbeat(cycle_id, psi, gate_open, lambda_val)
+    except Exception:
+        pass
 
 _coherence_engine = None
 _action_gate = None
@@ -73,6 +82,25 @@ async def evaluate_action(req: ActionRequest):
         domain=req.domain,
         plane_scores=plane_scores,
     )
+
+    # Push to live SSE stream and on-chain heartbeat (fire-and-forget)
+    try:
+        from api.routes.stream import push_action_event
+        push_action_event({
+            "cycle_id": cycle_id,
+            "gate": "OPEN" if gate_open else "SILENT",
+            "psi": round(psi, 4),
+            "delta": round(delta, 4),
+            "lambda": round(lambda_val, 8),
+            "omega": round(omega, 6),
+            "domain": req.domain,
+            "planes": {"p": round(plane_scores["p"], 4), "i": round(plane_scores["i"], 4),
+                       "c": round(plane_scores["c"], 4), "s": round(plane_scores["s"], 4),
+                       "w": round(plane_scores["w"], 4)},
+        })
+        asyncio.create_task(_emit_heartbeat(cycle_id, psi, gate_open, lambda_val))
+    except Exception:
+        pass
 
     return ActionResponse(
         cycle_id=cycle_id,

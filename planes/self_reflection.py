@@ -27,6 +27,8 @@ class SelfReflectionPlane:
             with open(self.MEMORY_FILE) as f:
                 self.past_embeddings = json.load(f)
 
+    _SAVE_EVERY = 20
+
     def _save(self):
         with open(self.MEMORY_FILE, "w") as f:
             json.dump(self.past_embeddings[-self.MAX_MEMORY :], f)
@@ -51,7 +53,9 @@ class SelfReflectionPlane:
         s = math.tanh(d_t / self.D_REF)
 
         self.past_embeddings.append(query_vec)
-        self._save()
+        # Batch saves: write to disk every _SAVE_EVERY calls instead of every call
+        if len(self.past_embeddings) % self._SAVE_EVERY == 0:
+            self._save()
 
         return max(0.0, min(1.0, s))
 
