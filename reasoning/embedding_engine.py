@@ -5,30 +5,41 @@ from typing import List
 
 _MODEL = None
 
-try:
-    from sentence_transformers import SentenceTransformer
-    TRANSFORMERS_AVAILABLE = True
-except Exception:
-    TRANSFORMERS_AVAILABLE = False
+TRANSFORMERS_AVAILABLE = os.getenv("ENABLE_SENTENCE_TRANSFORMERS", "false").lower() == "true"
+
+if TRANSFORMERS_AVAILABLE:
+    try:
+        from sentence_transformers import SentenceTransformer
+    except Exception:
+        TRANSFORMERS_AVAILABLE = False
 
 
 def _get_model():
     global _MODEL
     if _MODEL is None and TRANSFORMERS_AVAILABLE:
-        _MODEL = SentenceTransformer("all-MiniLM-L6-v2")
+        try:
+            _MODEL = SentenceTransformer("all-MiniLM-L6-v2")
+        except Exception as e:
+            print(f"[EMBED] Model load failed: {e}")
     return _MODEL
 
 
 class EmbeddingEngine:
-    """Embeds text into vectors. Uses sentence-transformers when available, fallback otherwise."""
+    """
+    Embeds text into vectors.
+    Set ENABLE_SENTENCE_TRANSFORMERS=true to use sentence-transformers (requires GPU/high-RAM).
+    Default: deterministic SHA-256 hash-based fallback (384-dim, normalized).
+    """
 
     DIM = 384
 
     def embed(self, text: str) -> List[float]:
         model = _get_model()
         if model is not None:
-            vec = model.encode(text, normalize_embeddings=True).tolist()
-            return vec
+            try:
+                return model.encode(text, normalize_embeddings=True).tolist()
+            except Exception:
+                pass
         return self._fallback_embed(text)
 
     def _fallback_embed(self, text: str) -> List[float]:
