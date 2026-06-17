@@ -34,7 +34,7 @@ class SelfReflectionPlane:
             json.dump(self.past_embeddings[-self.MAX_MEMORY :], f)
 
     def compute(self, query: str) -> float:
-        query_vec = self._simple_embed(query)
+        query_vec = self._embed(query)
 
         if not self.past_embeddings:
             self.past_embeddings.append(query_vec)
@@ -59,7 +59,14 @@ class SelfReflectionPlane:
 
         return max(0.0, min(1.0, s))
 
-    def _simple_embed(self, text: str) -> List[float]:
+    def _embed(self, text: str) -> List[float]:
+        try:
+            from reasoning.embedding_engine import EmbeddingEngine
+            return EmbeddingEngine().embed(text)
+        except Exception:
+            return self._fallback_embed(text)
+
+    def _fallback_embed(self, text: str) -> List[float]:
         import hashlib
         h = hashlib.sha256(text.encode()).digest()
         vec = [(b / 255.0) * 2 - 1 for b in h]

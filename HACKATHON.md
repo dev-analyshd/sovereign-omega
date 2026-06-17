@@ -179,7 +179,7 @@ curl https://your-agent.replit.app/api/v1/agent/discover
 | `SovereignLearner` | Domain mastery ledger, IQ milestones | Pharos testnet/mainnet |
 
 ### Chain IDs
-- **Testnet (Atlantic Ocean)**: `688688` — RPC: `https://testnet.pharosnetwork.xyz`
+- **Testnet (Atlantic Ocean)**: `688689` — RPC: `https://testnet.pharosnetwork.xyz`
 - **Mainnet (Pacific Ocean)**: `1672` — RPC: `https://rpc.pharos.xyz`
 
 ### x402 Payment Token Addresses

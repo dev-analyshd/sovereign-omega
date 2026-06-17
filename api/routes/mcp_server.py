@@ -246,6 +246,14 @@ async def mcp_handler(request: Request) -> JSONResponse:
                 }),
             )
 
+    # ── resources/list — required by MCP spec ──────────────────────────────────
+    if method == "resources/list":
+        return JSONResponse(_ok(req_id, {"resources": []}))
+
+    # ── prompts/list — required by MCP spec ────────────────────────────────────
+    if method == "prompts/list":
+        return JSONResponse(_ok(req_id, {"prompts": []}))
+
     # ── unknown method ──────────────────────────────────────────────────────────
     return JSONResponse(
         _err(req_id, -32601, f"Method not found: {method}"),
@@ -322,13 +330,18 @@ async def _dispatch_skill(skill_id: str, args: dict) -> str:
         }, indent=2)
 
     if skill_id == "moat_status":
-        lam = moat.get_current_lambda()
-        cycles = moat.n_cycles
-        iq = lam * math.exp(lam * max(cycles, 1))
+        from learning.intelligence_score import IntelligenceScorer
+        scorer = IntelligenceScorer()
+        breakdown = await scorer.get_breakdown()
         return json.dumps({
-            "lambda": round(lam, 8),
-            "iq_score": round(iq, 6),
-            "total_cycles": cycles,
+            "lambda": round(breakdown["lambda"], 8),
+            "log_lambda": round(breakdown["log_lambda"], 6),
+            "iq_score": round(breakdown["iq_score"], 6),
+            "total_cycles": breakdown["n_cycles"],
+            "n_domains": breakdown["n_domains"],
+            "mastery_avg": round(breakdown["mastery_avg"], 6),
+            "t_normalized": round(breakdown["t_normalized"], 6),
+            "interpretation": breakdown["interpretation"],
             "lambda_formula": "log(Λ) = log(Λ₀) + Σᵢ log(1 + η·ρ)",
             "moat_note": "Monotonically non-decreasing — moat never shrinks.",
         }, indent=2)
@@ -361,39 +374,50 @@ async def _dispatch_skill(skill_id: str, args: dict) -> str:
         }, indent=2)
 
     if skill_id == "intelligence_score":
-        lam = moat.get_current_lambda()
-        cycles = moat.n_cycles
-        iq = lam * math.exp(lam * max(cycles, 1))
-        if iq < 0.001:
-            interp = "Initializing"
-        elif iq < 0.01:
-            interp = "Early stage"
-        elif iq < 0.1:
-            interp = "Growing"
-        elif iq < 1.0:
-            interp = "Advanced"
-        elif iq < 10.0:
-            interp = "Expert"
-        else:
-            interp = "Elite"
+        from learning.intelligence_score import IntelligenceScorer
+        scorer = IntelligenceScorer()
+        breakdown = await scorer.get_breakdown()
         include_proj = args.get("include_projection", False)
         result: dict = {
-            "lambda": round(lam, 8),
-            "iq_score": round(iq, 6),
-            "iq_interpretation": interp,
-            "total_cycles": cycles,
+            "lambda": round(breakdown["lambda"], 8),
+            "log_lambda": round(breakdown["log_lambda"], 6),
+            "iq_score": round(breakdown["iq_score"], 6),
+            "iq_interpretation": breakdown["interpretation"],
+            "n_domains": breakdown["n_domains"],
+            "mastery_avg": round(breakdown["mastery_avg"], 6),
+            "total_cycles": breakdown["n_cycles"],
+            "t_normalized": round(breakdown["t_normalized"], 6),
         }
         if include_proj:
-            lam_30d = lam * (1 + 0.01) ** 30
-            iq_30d = lam_30d * math.exp(lam_30d * max(cycles + 30, 1))
-            result["projected_lambda_30d"] = round(lam_30d, 8)
-            result["projected_iq_30d"] = round(iq_30d, 6)
-        return json.dumps(result, indent=2)
+            proj = breakdown.get("projection_30d")
+            result["projected_iq_30d"] = proj if isinstance(proj, (int, float)) else "∞"
+        return json.dumps(result, indent=2, default=str)
 
-    if skill_id in ("trade_evaluate", "reasoning_chain"):
+    if skill_id == "trade_evaluate":
+        from trading.decision_engine import TradingDecisionEngine
+        engine = TradingDecisionEngine()
+        result = await engine.evaluate_trade(
+            symbol=args.get("symbol", "BTC/USDT"),
+            direction=args.get("direction", "LONG"),
+            strategy=args.get("strategy", "momentum"),
+        )
+        return json.dumps(result, indent=2, default=str)
+
+    if skill_id == "reasoning_chain":
+        from reasoning.chain_manager import ChainManager
+        manager = ChainManager()
+        question = args.get("question", args.get("query", ""))
+        domain = args.get("domain", "general")
+        chains = await manager.run_chains(question, {"domain": domain})
+        if not chains:
+            return json.dumps({"best_response": "No coherent chain produced", "confidence": 0.0, "n_chains": 0})
+        best = max(chains, key=lambda c: c.get("confidence", 0))
         return json.dumps({
-            "message": "Premium skill — x402 payment verified. Live execution requires on-chain contract deployment.",
-            "hint": "Set PHAROS_VAULT env var to enable live trading.",
+            "best_response": best.get("response", ""),
+            "confidence": best.get("confidence", 0.0),
+            "n_chains": len(chains),
+            "embedding_dim": len(best.get("vector", [])) or 384,
+            "elapsed_ms": round(best.get("elapsed_ms", 0), 2),
         }, indent=2)
 
     return json.dumps({"error": f"Unknown skill: {skill_id}"})

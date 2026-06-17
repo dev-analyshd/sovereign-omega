@@ -227,6 +227,16 @@ class SkillInvokeResponse(BaseModel):
 # ---------------------------------------------------------------------------
 # x402 Payment Gate helpers
 # ---------------------------------------------------------------------------
+def _get_agent_address() -> str:
+    import os
+    try:
+        from pharos.chain_client import PharosClient
+        client = PharosClient()
+        return client.address
+    except Exception:
+        return os.getenv("AGENT_OPERATOR_ADDRESS", "0x0000000000000000000000000000000000000000")
+
+
 def _get_skill_tier(skill_id: str) -> str:
     for s in SKILLS_MANIFEST["skills"]:
         if s["id"] == skill_id:
@@ -315,7 +325,7 @@ async def invoke_skill(skill_id: str, req: SkillInvokeRequest, response: Respons
                                 "network": "pharos-testnet",
                                 "maxAmountRequired": prices.get("PROS", "1.0"),
                                 "token": "PROS",
-                                "payTo": "0x0000000000000000000000000000000000000000",
+                                "payTo": _get_agent_address(),
                                 "facilitator": SKILLS_MANIFEST["x402_facilitator"],
                             },
                             {
@@ -323,7 +333,7 @@ async def invoke_skill(skill_id: str, req: SkillInvokeRequest, response: Respons
                                 "network": "pharos-testnet",
                                 "maxAmountRequired": prices.get("USDC", "0.10"),
                                 "token": "USDC",
-                                "payTo": "0x0000000000000000000000000000000000000000",
+                                "payTo": _get_agent_address(),
                                 "facilitator": SKILLS_MANIFEST["x402_facilitator"],
                             },
                         ],

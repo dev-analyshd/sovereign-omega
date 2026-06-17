@@ -4,10 +4,15 @@ from typing import Dict, List
 try:
     import ccxt.async_support as ccxt
     import pandas as pd
-    import pandas_ta as ta
     CCXT_AVAILABLE = True
 except ImportError:
     CCXT_AVAILABLE = False
+
+try:
+    import pandas_ta as ta
+    PANDAS_TA_AVAILABLE = True
+except ImportError:
+    PANDAS_TA_AVAILABLE = False
 
 
 class MarketFeed:
@@ -34,16 +39,29 @@ class MarketFeed:
         try:
             ohlcv = await self.exchange.fetch_ohlcv(symbol, timeframe, limit=limit)
             import pandas as pd
-            import pandas_ta as ta
 
             df = pd.DataFrame(ohlcv, columns=["timestamp", "open", "high", "low", "close", "volume"])
             df["timestamp"] = pd.to_datetime(df["timestamp"], unit="ms")
-            df["atr_14"] = ta.atr(df["high"], df["low"], df["close"], length=14)
-            df["rsi_14"] = ta.rsi(df["close"], length=14)
-            macd = ta.macd(df["close"])
-            if macd is not None:
-                df["macd"] = macd["MACD_12_26_9"]
-                df["signal_line"] = macd["MACDs_12_26_9"]
+
+            if PANDAS_TA_AVAILABLE:
+                import pandas_ta as ta
+                df["atr_14"] = ta.atr(df["high"], df["low"], df["close"], length=14)
+                df["rsi_14"] = ta.rsi(df["close"], length=14)
+                macd = ta.macd(df["close"])
+                if macd is not None:
+                    df["macd"] = macd["MACD_12_26_9"]
+                    df["signal_line"] = macd["MACDs_12_26_9"]
+            else:
+                # Fallback: simple ATR and RSI approximations without pandas-ta
+                df["atr_14"] = (df["high"] - df["low"]).rolling(14).mean()
+                delta = df["close"].diff()
+                gain = delta.clip(lower=0).rolling(14).mean()
+                loss = (-delta.clip(upper=0)).rolling(14).mean()
+                rs = gain / (loss + 1e-9)
+                df["rsi_14"] = 100 - (100 / (1 + rs))
+                df["macd"] = float("nan")
+                df["signal_line"] = float("nan")
+
             self.latest_data[f"{symbol}_{timeframe}"] = df
             return df
         except Exception as e:

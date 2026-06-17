@@ -12,17 +12,20 @@ except ImportError:
 
 class LLMInterface:
     """
-    LLM reasoning interface. Uses Anthropic Claude when available.
+    LLM reasoning interface. Uses Anthropic Claude via Replit AI Integration when available.
     Extracts CONFIDENCE score from responses.
     """
 
-    DEFAULT_MODEL = "claude-3-5-haiku-20241022"
+    DEFAULT_MODEL = "claude-haiku-4-5"
 
     def __init__(self):
         if ANTHROPIC_AVAILABLE:
-            self.client = anthropic.AsyncAnthropic(
-                api_key=os.getenv("ANTHROPIC_API_KEY")
-            )
+            base_url = os.getenv("AI_INTEGRATIONS_ANTHROPIC_BASE_URL")
+            api_key = os.getenv("AI_INTEGRATIONS_ANTHROPIC_API_KEY") or os.getenv("ANTHROPIC_API_KEY")
+            kwargs = {"api_key": api_key} if api_key else {}
+            if base_url:
+                kwargs["base_url"] = base_url
+            self.client = anthropic.AsyncAnthropic(**kwargs)
         else:
             self.client = None
 

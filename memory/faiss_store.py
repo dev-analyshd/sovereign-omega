@@ -10,7 +10,7 @@ except ImportError:
 
 INDEX_FILE = "data/faiss_index.bin"
 META_FILE = "data/faiss_meta.json"
-DIM = 256
+DIM = 384
 
 
 class FAISSStore:
