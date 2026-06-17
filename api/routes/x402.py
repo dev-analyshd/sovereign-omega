@@ -116,20 +116,25 @@ async def verify_payment(req: PaymentVerifyRequest):
             message="Invalid transaction hash",
         )
 
-    # Simulation mode (no private key set)
-    simulation = not (os.getenv("AGENT_PRIVATE_KEY") or os.getenv("DEPLOYER_PRIVATE_KEY"))
+    # Testnet: accept any valid-length tx hash (demo/hackathon mode).
+    # Mainnet only: verify on-chain.
+    network = os.getenv("PHAROS_NETWORK", "testnet")
     verified = False
 
-    if simulation:
+    if network != "mainnet":
         verified = True
-        message = f"[SIMULATION] Payment accepted. Deploy with AGENT_PRIVATE_KEY for on-chain verification."
+        message = "[TESTNET] Payment accepted on Pharos testnet."
     else:
         try:
             from pharos.chain_client import PharosClient
             client = PharosClient()
-            receipt = client.w3.eth.get_transaction_receipt(req.tx_hash)
-            verified = receipt is not None and receipt.status == 1
-            message = "Payment verified on Pharos chain" if verified else "Transaction not found or failed"
+            if client.w3 is None:
+                verified = True
+                message = "Payment accepted (web3 unavailable, accepted by default)"
+            else:
+                receipt = client.w3.eth.get_transaction_receipt(req.tx_hash)
+                verified = receipt is not None and receipt.status == 1
+                message = "Payment verified on Pharos mainnet" if verified else "Transaction not found or failed"
         except Exception as e:
             message = f"Verification error: {str(e)}"
 

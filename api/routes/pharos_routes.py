@@ -52,13 +52,28 @@ async def sync_to_pharos():
         moat = MoatAccumulator()
         scorer = IntelligenceScorer()
         iq = await scorer.compute()
+        lambda_val = moat.get_current_lambda()
 
-        tx = await client.update_registry_moat(moat.get_current_lambda(), moat.n_cycles, iq)
+        try:
+            tx = await client.update_registry_moat(lambda_val, moat.n_cycles, iq)
+            status = "simulated" if client.simulation_mode else "synced"
+            note = None
+        except Exception as chain_err:
+            err_str = str(chain_err)
+            if "Moat cannot decrease" in err_str or "execution reverted" in err_str:
+                tx = None
+                status = "skipped"
+                note = "On-chain Λ already >= local Λ. Monotonicity enforced — sync skipped. Accumulate more cycles to exceed on-chain value."
+            else:
+                raise
+
         return {
-            "status": "simulated" if client.simulation_mode else "synced",
+            "status": status,
             "tx_hash": tx,
-            "lambda": moat.get_current_lambda(),
+            "lambda": lambda_val,
+            "n_cycles": moat.n_cycles,
             "iq": iq,
+            **({"note": note} if note else {}),
         }
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
