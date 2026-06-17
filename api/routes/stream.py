@@ -176,6 +176,103 @@ async def stream_heartbeat(request: Request):
     )
 
 
+@router.get("/stream/dashboard")
+async def stream_dashboard(request: Request):
+    """
+    SSE: Full dashboard state frame every second.
+    Replaces the WebSocket feed — works through all proxies including Replit.
+    Emits: psi, delta, gate, planes, lambda, log_lambda, cycles, iq, peers, chain_syncs.
+    """
+    async def generate():
+        import uuid as _uuid
+        from core.moat_accumulator import MoatAccumulator
+        from core.coherence_engine import CoherenceEngine
+        from core.action_gate import ActionGate
+        from core.on_chain_heartbeat import get_sync_stats
+        from learning.intelligence_score import IntelligenceScorer
+        from api.routes.federation import _peers
+
+        yield f"data: {json.dumps({'type': 'hello', 'agent': 'SOVEREIGN-Ω', 'transport': 'SSE'})}\n\n"
+
+        seq = 0
+        while True:
+            try:
+                if await request.is_disconnected():
+                    break
+
+                moat   = MoatAccumulator()
+                scorer = IntelligenceScorer()
+                engine = CoherenceEngine()
+                gate   = ActionGate()
+                iq     = await scorer.compute()
+
+                ctx = {
+                    "input_channels": {"dashboard": [float(seq % 10) / 10.0]},
+                    "reasoning_chains": [],
+                    "environmental_signals": {},
+                    "volatility": 0.1,
+                    "novelty": 0.2,
+                }
+                try:
+                    scores = await engine.compute_all_planes(
+                        "live dashboard pulse", ctx, str(_uuid.uuid4())
+                    )
+                    planes = {k: round(scores.get(k, 0.0), 6) for k in ("p","i","c","s","w")}
+                    psi    = round(scores.get("psi_total", 0.0), 6)
+                except Exception:
+                    planes = {"p": 0.0, "i": 0.0, "c": 0.0, "s": 0.0, "w": 0.0}
+                    psi    = 0.0
+
+                delta      = round(gate.compute_threshold(0.1, 0.2), 4)
+                gate_open  = gate.is_open(psi, delta)
+                stats      = get_sync_stats()
+                lam        = moat.get_current_lambda()
+                peer_list  = [
+                    {
+                        "id": p.get("peer_id", "?"),
+                        "name": p.get("name", "unknown"),
+                        "status": p.get("status", "active"),
+                        "psi": p.get("psi_at_announce") or p.get("their_psi"),
+                    }
+                    for p in list(_peers.values())[:20]
+                ]
+
+                frame = {
+                    "type": "state",
+                    "seq": seq,
+                    "ts": datetime.now(timezone.utc).isoformat(),
+                    "psi": psi,
+                    "delta": delta,
+                    "gate": "OPEN" if gate_open else "SILENCE",
+                    "planes": planes,
+                    "lambda": lam,
+                    "log_lambda": round(moat.log_lambda, 4),
+                    "cycles": moat.n_cycles,
+                    "iq": round(iq, 4),
+                    "chain_syncs": stats["total_chain_syncs"],
+                    "next_sync_in": max(
+                        0,
+                        stats["sync_interval_cycles"]
+                        - (moat.n_cycles - stats["last_synced_at_cycle"]),
+                    ),
+                    "peers": peer_list,
+                    "peer_count": len(peer_list),
+                }
+                yield f"data: {json.dumps(frame)}\n\n"
+                seq += 1
+                await asyncio.sleep(1)
+
+            except Exception as e:
+                yield f"data: {json.dumps({'type': 'error', 'message': str(e)})}\n\n"
+                await asyncio.sleep(2)
+
+    return StreamingResponse(
+        generate(),
+        media_type="text/event-stream",
+        headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no"},
+    )
+
+
 @router.get("/stream/actions")
 async def stream_actions(request: Request):
     """

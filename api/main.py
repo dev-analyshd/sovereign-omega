@@ -300,14 +300,6 @@ async def root():
 
 @app.get("/dashboard", response_class=HTMLResponse, include_in_schema=False)
 async def dashboard():
-    import os
-    ws_protocol = "wss"
-    host = os.getenv("REPLIT_DEV_DOMAIN", "")
-    if host:
-        ws_url = f"{ws_protocol}://{host}/ws/dashboard"
-    else:
-        ws_url = f"ws://localhost:{os.getenv('PORT', '8000')}/ws/dashboard"
-
     return f"""<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -583,7 +575,6 @@ async def dashboard():
 </div>
 
 <script>
-const WS_URL = "{ws_url}";
 const WINDOW = 60;
 
 // ── Chart.js shared config ──────────────────────────────────────────
@@ -772,75 +763,73 @@ function updatePlanes(planes) {{
   }});
 }}
 
-// ── WebSocket ───────────────────────────────────────────────────────
+// ── SSE Dashboard Stream ─────────────────────────────────────────────
 let lastSeq = -1;
 let maxLogLam = 60;
+let sseSource = null;
+
+function onFrame(d) {{
+  if (d.type !== 'state') return;
+
+  const gate  = d.gate || 'SILENCE';
+  const badge = document.getElementById('gate-badge');
+  badge.textContent = gate;
+  badge.className   = gate === 'OPEN' ? 'open' : 'silence';
+  document.getElementById('psi-val').textContent = (d.psi||0).toFixed(4);
+  document.getElementById('delta-val').textContent =
+    `Δ = ${{(d.delta||0).toFixed(4)}} | Ψ−Δ = ${{((d.psi||0)-(d.delta||0)).toFixed(4)}}`;
+
+  pushChart(psiChart, d.psi ?? null);
+  if (d.log_lambda != null) {{
+    maxLogLam = Math.max(maxLogLam, d.log_lambda * 1.05);
+    lambdaChart.options.scales.y.max = Math.ceil(maxLogLam);
+    pushChart(lambdaChart, d.log_lambda);
+  }}
+
+  if (d.planes) updatePlanes(d.planes);
+
+  document.getElementById('m-cycles').textContent    = (d.cycles||0).toLocaleString();
+  document.getElementById('m-lambda').textContent    = fmtBig(d.lambda);
+  document.getElementById('m-loglambda').textContent = (d.log_lambda||0).toFixed(4);
+  document.getElementById('m-iq').textContent        = fmtBig(d.iq);
+  document.getElementById('m-syncs').textContent     = d.chain_syncs ?? '—';
+  document.getElementById('m-nextsync').textContent  = `${{d.next_sync_in ?? '—'}} cycles`;
+  document.getElementById('m-peers').textContent     = d.peer_count ?? 0;
+  document.getElementById('m-seq').textContent       = `#${{d.seq ?? 0}}`;
+
+  renderFedSVG(d.peers || []);
+
+  if (d.seq !== lastSeq && (d.seq % 10 === 0 || lastSeq === -1)) {{
+    addFeedItem(gate, d.psi||0, d.ts || new Date().toISOString());
+  }}
+  lastSeq = d.seq;
+}}
 
 function connect() {{
   const status = document.getElementById('ws-status');
   status.textContent = '⟳ Connecting…';
-  status.className = '';
+  status.className   = '';
 
-  const ws = new WebSocket(WS_URL);
+  if (sseSource) {{ sseSource.close(); sseSource = null; }}
 
-  ws.onopen = () => {{
+  sseSource = new EventSource('/api/v1/stream/dashboard');
+
+  sseSource.onopen = () => {{
     status.textContent = '● Live';
-    status.className = 'connected';
+    status.className   = 'connected';
   }};
 
-  ws.onmessage = (e) => {{
+  sseSource.onmessage = (e) => {{
     let d;
     try {{ d = JSON.parse(e.data); }} catch {{ return; }}
-    if (d.type !== 'state') return;
-
-    // Gate
-    const gate = d.gate || 'SILENCE';
-    const badge = document.getElementById('gate-badge');
-    badge.textContent = gate;
-    badge.className = gate === 'OPEN' ? 'open' : 'silence';
-    document.getElementById('psi-val').textContent = (d.psi||0).toFixed(4);
-    document.getElementById('delta-val').textContent =
-      `Δ = ${{(d.delta||0).toFixed(4)}} | Ψ−Δ = ${{((d.psi||0)-(d.delta||0)).toFixed(4)}}`;
-
-    // Charts
-    pushChart(psiChart, d.psi ?? null);
-    if (d.log_lambda != null) {{
-      maxLogLam = Math.max(maxLogLam, d.log_lambda * 1.05);
-      lambdaChart.options.scales.y.max = Math.ceil(maxLogLam);
-      pushChart(lambdaChart, d.log_lambda);
-    }}
-
-    // Planes
-    if (d.planes) updatePlanes(d.planes);
-
-    // Metrics
-    document.getElementById('m-cycles').textContent   = (d.cycles||0).toLocaleString();
-    document.getElementById('m-lambda').textContent   = fmtBig(d.lambda);
-    document.getElementById('m-loglambda').textContent = (d.log_lambda||0).toFixed(4);
-    document.getElementById('m-iq').textContent       = fmtBig(d.iq);
-    document.getElementById('m-syncs').textContent    = d.chain_syncs ?? '—';
-    document.getElementById('m-nextsync').textContent = `${{d.next_sync_in ?? '—'}} cycles`;
-    document.getElementById('m-peers').textContent    = d.peer_count ?? 0;
-    document.getElementById('m-seq').textContent      = `#${{d.seq ?? 0}}`;
-
-    // Federation SVG
-    renderFedSVG(d.peers || []);
-
-    // Feed — add entry if gate changed or every 10 frames
-    if (d.seq !== lastSeq && (d.seq % 10 === 0 || lastSeq === -1)) {{
-      addFeedItem(gate, d.psi||0, d.ts || new Date().toISOString());
-    }}
-    lastSeq = d.seq;
+    onFrame(d);
   }};
 
-  ws.onerror = () => {{
-    status.textContent = '✗ Error';
-    status.className = '';
-  }};
-
-  ws.onclose = () => {{
+  sseSource.onerror = () => {{
     status.textContent = '↻ Reconnecting…';
-    status.className = '';
+    status.className   = '';
+    sseSource.close();
+    sseSource = null;
     setTimeout(connect, 3000);
   }};
 }}
@@ -1306,7 +1295,6 @@ async def pipeline_page():
 async def demo_page():
     import os
     host = os.getenv("REPLIT_DEV_DOMAIN", "")
-    ws_url = f"wss://{host}/ws/dashboard" if host else f"ws://localhost:{os.getenv('PORT','8000')}/ws/dashboard"
     action_url = f"https://{host}/api/v1/action" if host else f"http://localhost:{os.getenv('PORT','8000')}/api/v1/action"
 
     return f"""<!DOCTYPE html>
@@ -1707,13 +1695,16 @@ let prevLam=null;
 const badge=document.getElementById('conn-badge');
 let lastSeq=-1;
 
+let _demoSse=null;
 function connect(){{
   badge.textContent='⟳ Connecting…';badge.className='';
-  const ws=new WebSocket('{ws_url}');
+  if(_demoSse){{_demoSse.close();_demoSse=null;}}
 
-  ws.onopen=()=>{{badge.textContent='● LIVE';badge.className='live'}};
+  _demoSse=new EventSource('/api/v1/stream/dashboard');
 
-  ws.onmessage=(e)=>{{
+  _demoSse.onopen=()=>{{badge.textContent='● LIVE';badge.className='live'}};
+
+  _demoSse.onmessage=(e)=>{{
     let d;try{{d=JSON.parse(e.data)}}catch{{return}}
     if(d.type!=='state') return;
 
@@ -1763,8 +1754,7 @@ function connect(){{
     lastSeq=d.seq;
   }};
 
-  ws.onerror=()=>{{badge.textContent='✗ Error';badge.className=''}};
-  ws.onclose=()=>{{badge.textContent='↻ Reconnecting…';badge.className='';setTimeout(connect,3000)}};
+  _demoSse.onerror=()=>{{badge.textContent='↻ Reconnecting…';badge.className='';_demoSse.close();_demoSse=null;setTimeout(connect,3000)}};
 }}
 
 // ── Fire button ───────────────────────────────────────────────────────────────
