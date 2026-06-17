@@ -1,0 +1,17 @@
+{
+  "name": "sovereign-omega-contracts",
+  "version": "1.0.0",
+  "description": "SOVEREIGN-Ω Smart Contracts - Pharos Chain",
+  "private": true,
+  "scripts": {
+    "compile": "hardhat compile",
+    "deploy:testnet": "hardhat run deploy.js --network pharos_testnet",
+    "deploy:mainnet": "hardhat run deploy.js --network pharos_mainnet",
+    "clean": "hardhat clean"
+  },
+  "devDependencies": {
+    "@nomicfoundation/hardhat-toolbox": "^5.0.0",
+    "hardhat": "^2.22.0",
+    "dotenv": "^16.4.5"
+  }
+}
