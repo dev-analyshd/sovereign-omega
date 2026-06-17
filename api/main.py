@@ -5,6 +5,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from api.routes import action, trade, intelligence, pharos_routes, silence, moat, health
+from api.routes import skills, agent_card, x402
 
 
 @asynccontextmanager
@@ -71,3 +72,8 @@ app.include_router(intelligence.router, prefix="/api/v1", tags=["Intelligence"])
 app.include_router(pharos_routes.router, prefix="/api/v1", tags=["Pharos Chain"])
 app.include_router(silence.router, prefix="/api/v1", tags=["Silence"])
 app.include_router(moat.router, prefix="/api/v1", tags=["Moat"])
+
+# ── Pharos Phase 1 Hackathon: Skill-to-Agent Dual Cascade ──────────────────
+app.include_router(skills.router, prefix="/api/v1", tags=["Agent Skills (MCP)"])
+app.include_router(x402.router, prefix="/api/v1", tags=["x402 Payments"])
+app.include_router(agent_card.router, tags=["Agent Discovery (A2A)"])
