@@ -5,7 +5,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from api.routes import action, trade, intelligence, pharos_routes, silence, moat, health
-from api.routes import skills, agent_card, x402
+from api.routes import skills, agent_card, x402, mcp_server
 
 
 @asynccontextmanager
@@ -77,3 +77,4 @@ app.include_router(moat.router, prefix="/api/v1", tags=["Moat"])
 app.include_router(skills.router, prefix="/api/v1", tags=["Agent Skills (MCP)"])
 app.include_router(x402.router, prefix="/api/v1", tags=["x402 Payments"])
 app.include_router(agent_card.router, tags=["Agent Discovery (A2A)"])
+app.include_router(mcp_server.router, tags=["MCP Server (JSON-RPC 2.0)"])

@@ -1,0 +1,57 @@
+{
+  "name": "sovereign-omega-sdk",
+  "version": "1.0.0",
+  "description": "Pharos-native SOVEREIGN-Ω skills as LangChain tools — plug TRION coherence scoring and x402-gated reasoning into any pharos-agent-kit agent",
+  "keywords": [
+    "pharos",
+    "pharos-agent-kit",
+    "langchain",
+    "mcp",
+    "x402",
+    "agent-skills",
+    "trion",
+    "ai-agent",
+    "defi"
+  ],
+  "author": "SOVEREIGN-Ω",
+  "license": "MIT",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "require": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    }
+  },
+  "scripts": {
+    "build": "node build.mjs",
+    "typecheck": "tsc --noEmit --skipLibCheck",
+    "prepublishOnly": "npm run build"
+  },
+  "dependencies": {
+    "@langchain/core": "^0.3.0",
+    "viem": "^2.0.0",
+    "zod": "^3.23.0"
+  },
+  "peerDependencies": {
+    "pharos-agent-kit": "*"
+  },
+  "peerDependenciesMeta": {
+    "pharos-agent-kit": {
+      "optional": true
+    }
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "esbuild": "^0.28.1",
+    "typescript": "^5.4.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/your-org/sovereign-omega"
+  }
+}
