@@ -70,15 +70,18 @@ See `SECURITY.md` for full CertiK Skill Scanner compliance documentation.
 
 ### 4. Deployment On-Chain ✅
 - ✅ 3 Pharos smart contracts: `SovereignRegistry`, `SovereignVault`, `SovereignLearner`
-- ✅ **97 confirmed on-chain transactions** across all 3 contracts (wallet nonce verified)
+- ✅ **SovereignVault funded live** — 2.0 $PROS deposited June 17 2026
+  - Tx: [`0xad8b9a7ee114a853a8acd39432eec297ddba404185d553570008d8a1a8ab3363`](https://testnet.pharosscan.xyz/tx/0xad8b9a7ee114a853a8acd39432eec297ddba404185d553570008d8a1a8ab3363)
+  - Block: `24417627` · Gas used: `44,690` · Status: **✅ SUCCESS**
+  - Vault: [`0xAbC106D943a6Aff91A0B29f4a77E4009323d7A66`](https://testnet.pharosscan.xyz/address/0xAbC106D943a6Aff91A0B29f4a77E4009323d7A66)
 - ✅ **14 domain mastery records** written to `SovereignLearner` (trading, DeFi, blockchain, reasoning, …)
 - ✅ **12 silence events** recorded on-chain via `SovereignRegistry.recordSilence`
-- ✅ **12 silenced trades** recorded via `SovereignVault.recordSilencedTrade`
+- ✅ **12 silenced trades** recorded via `SovereignVault.recordSilencedTrade` — Silence Protocol working live
 - ✅ **6 FAISS index hashes** committed via `SovereignRegistry.updateFAISSHash`
 - ✅ **3 IQ milestones** written via `SovereignLearner.recordIQMilestone`
-- ✅ Moat state (Λ, cycles, IQ) synced to chain via `POST /api/v1/pharos/sync`
+- ✅ Moat state (Λ=215.69, cycles=20, IQ=0.251) synced to chain via `POST /api/v1/pharos/sync`
 - ✅ x402 payment verification against Pharos chain RPC
-- ✅ Agent wallet: `0xdBbf66CAD621dA3Ec186D18b29a135d2A5d42d20` · Chain ID: 688689
+- ✅ Agent wallet: [`0xdBbf66CAD621dA3Ec186D18b29a135d2A5d42d20`](https://testnet.pharosscan.xyz/address/0xdBbf66CAD621dA3Ec186D18b29a135d2A5d42d20) · Chain ID: 688689
 
 ---
 
@@ -231,7 +234,7 @@ Shannon entropy feeds the **Perceptual plane** P(t), making SOVEREIGN-Ω's coher
 
 ```bash
 # Clone and start
-git clone <repo>
+git clone https://github.com/dev-analyshd/sovereign-omega
 pip install -r requirements.txt
 
 # Build Rust entropy module
@@ -254,12 +257,20 @@ curl http://localhost:8000/api/v1/skills
 
 ## 📊 Live Demo
 
-- **Health**: `GET /api/v1/health`
-- **Agent Card**: `GET /.well-known/agent.json`
-- **All Skills**: `GET /api/v1/skills`
-- **Invoke Skill**: `POST /api/v1/skills/invoke/coherence_evaluate`
-- **x402 Config**: `GET /api/v1/x402/config`
-- **Swagger UI**: `/docs`
+> **GitHub**: https://github.com/dev-analyshd/sovereign-omega
+
+| Endpoint | URL |
+|---|---|
+| Homepage | `GET /` |
+| Real-time Dashboard | `GET /dashboard` |
+| Swagger UI | `GET /docs` |
+| Health + Moat | `GET /api/v1/health` |
+| Agent Card (A2A) | `GET /.well-known/agent.json` |
+| Skills Manifest | `GET /api/v1/skills` |
+| Invoke Free Skill | `POST /api/v1/skills/invoke/coherence_evaluate` |
+| x402 Payment Config | `GET /api/v1/x402/config` |
+| Pharos On-Chain Status | `GET /api/v1/pharos/status` |
+| MCP JSON-RPC | `POST /api/v1/mcp` |
 
 ---
 
