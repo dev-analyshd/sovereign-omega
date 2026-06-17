@@ -1300,3 +1300,510 @@ async def pipeline_page():
 </div>
 </body>
 </html>"""
+
+
+@app.get("/demo", response_class=HTMLResponse, include_in_schema=False)
+async def demo_page():
+    import os
+    host = os.getenv("REPLIT_DEV_DOMAIN", "")
+    ws_url = f"wss://{host}/ws/dashboard" if host else f"ws://localhost:{os.getenv('PORT','8000')}/ws/dashboard"
+    action_url = f"https://{host}/api/v1/action" if host else f"http://localhost:{os.getenv('PORT','8000')}/api/v1/action"
+
+    return f"""<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>SOVEREIGN-Ω · Live Demo</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<style>
+:root{{
+  --bg:#04040c;--surf:#09091a;--border:#16163a;
+  --accent:#7c5cfc;--green:#2ecc71;--red:#c0392b;
+  --orange:#f39c12;--text:#d0d0f0;--muted:#40406a;
+}}
+*{{margin:0;padding:0;box-sizing:border-box}}
+html,body{{height:100%;background:var(--bg);color:var(--text);font-family:'Courier New',monospace;overflow-x:hidden}}
+
+/* ── STARFIELD ── */
+#stars{{position:fixed;inset:0;z-index:0;pointer-events:none;overflow:hidden}}
+.star{{position:absolute;border-radius:50%;background:#fff;animation:twinkle var(--d,3s) ease-in-out infinite}}
+@keyframes twinkle{{0%,100%{{opacity:.1}}50%{{opacity:var(--op,.8)}}}}
+
+/* ── LAYOUT ── */
+#app{{position:relative;z-index:1;min-height:100vh;display:flex;flex-direction:column}}
+
+/* ── HEADER ── */
+header{{
+  text-align:center;padding:2.5rem 1rem 1.5rem;
+  background:linear-gradient(180deg,rgba(8,4,28,.95) 0%,transparent 100%);
+}}
+header h1{{font-size:clamp(1.6rem,4vw,3rem);color:#a080ff;letter-spacing:.12em;text-shadow:0 0 40px rgba(160,128,255,.4)}}
+header .eq{{color:var(--muted);font-size:clamp(.7rem,.9vw,1rem);margin:.4rem 0}}
+header .tagline{{color:#50507a;font-size:.75rem;font-style:italic}}
+#conn-badge{{display:inline-block;margin-top:.8rem;padding:.2rem .8rem;border-radius:12px;font-size:.72rem;font-weight:700;
+  background:#1a140a;color:var(--orange);border:1px solid var(--orange);transition:all .4s}}
+#conn-badge.live{{background:#061206;color:var(--green);border-color:var(--green)}}
+
+/* ── MAIN GRID ── */
+main{{flex:1;display:grid;gap:1px;background:var(--border);
+  grid-template-columns:1fr 1fr 1fr;
+  grid-template-rows:auto auto auto;
+  margin:0}}
+
+.panel{{background:var(--surf);padding:1.4rem;display:flex;flex-direction:column;gap:.7rem}}
+.panel-title{{font-size:.6rem;text-transform:uppercase;letter-spacing:.18em;color:var(--muted);
+  padding-bottom:.5rem;border-bottom:1px solid var(--border)}}
+
+/* ── PSI GAUGE ── */
+#gauge-panel{{grid-column:1;grid-row:1/3;align-items:center;justify-content:center}}
+#gauge-wrap{{position:relative;width:220px;height:220px;margin:0 auto}}
+#gauge-svg{{width:100%;height:100%}}
+#gauge-psi{{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center}}
+#gauge-psi .psi-num{{font-size:2.8rem;font-weight:700;color:var(--accent);line-height:1}}
+#gauge-psi .psi-lbl{{font-size:.65rem;color:var(--muted);margin-top:.2rem}}
+#gauge-psi .psi-gate{{font-size:.9rem;font-weight:700;margin-top:.4rem;letter-spacing:.1em}}
+#gauge-psi .psi-gate.silence{{color:var(--red)}}
+#gauge-psi .psi-gate.open{{color:var(--green);text-shadow:0 0 12px rgba(46,204,113,.6)}}
+
+/* delta line annotation */
+#gauge-delta-lbl{{font-size:.68rem;color:var(--muted);text-align:center}}
+
+/* ── LAMBDA HERO ── */
+#lambda-panel{{grid-column:2;grid-row:1;align-items:center;text-align:center}}
+#lambda-big{{font-size:clamp(1.2rem,2.5vw,2rem);font-weight:700;color:var(--accent);
+  font-variant-numeric:tabular-nums;letter-spacing:.04em;word-break:break-all;line-height:1.1}}
+#log-lambda{{font-size:.8rem;color:var(--muted);margin-top:.3rem}}
+#lambda-growth{{font-size:.72rem;color:var(--green);margin-top:.2rem}}
+#cycles-num{{font-size:1.6rem;font-weight:700;color:var(--green);margin-top:.6rem}}
+#cycles-lbl{{font-size:.62rem;color:var(--muted)}}
+
+/* ── CHAIN PANEL ── */
+#chain-panel{{grid-column:3;grid-row:1;text-align:center;justify-content:center}}
+#sync-num{{font-size:3rem;font-weight:700;color:var(--green)}}
+#sync-lbl{{font-size:.62rem;color:var(--muted)}}
+#sync-next{{font-size:.75rem;color:var(--orange);margin-top:.4rem}}
+.chain-addr{{font-size:.62rem;color:#30306a;margin-top:.6rem;word-break:break-all}}
+#hb-ring{{width:60px;height:60px;margin:.6rem auto;position:relative}}
+#hb-ring svg{{width:100%;height:100%}}
+.hb-pulse{{animation:hbring 1.5s ease-out infinite}}
+@keyframes hbring{{0%{{r:20;opacity:.8}}100%{{r:30;opacity:0}}}}
+
+/* ── PLANES ── */
+#planes-panel{{grid-column:2;grid-row:2}}
+.plane{{display:flex;flex-direction:column;gap:3px;margin:.2rem 0}}
+.plane-top{{display:flex;justify-content:space-between;font-size:.7rem}}
+.plane-name{{color:var(--muted)}}
+.plane-val{{font-weight:700}}
+.bar-bg{{height:7px;background:#0a0a18;border-radius:4px;overflow:hidden}}
+.bar-fill{{height:7px;border-radius:4px;transition:width .6s ease}}
+
+/* ── GATE FEED ── */
+#feed-panel{{grid-column:3;grid-row:2;overflow:hidden}}
+#feed{{flex:1;overflow-y:auto;display:flex;flex-direction:column;gap:4px;max-height:220px}}
+.feed-row{{display:flex;gap:.6rem;align-items:baseline;padding:.3rem .5rem;border-radius:4px;
+  border-left:3px solid;background:#050510;font-size:.7rem}}
+.feed-row.silence{{border-color:var(--red);color:#c07070}}
+.feed-row.open{{border-color:var(--green);color:#70c070}}
+.feed-time{{color:var(--muted);flex-shrink:0;font-size:.62rem;width:56px}}
+.feed-gate{{font-weight:700;flex-shrink:0;width:52px}}
+.feed-psi{{color:var(--muted)}}
+
+/* ── CHART STRIP ── */
+#chart-panel{{grid-column:1/-1;grid-row:3;min-height:160px}}
+#chart-inner{{display:grid;grid-template-columns:1fr 1fr;gap:1px;background:var(--border);height:160px}}
+.chart-cell{{background:var(--surf);padding:.8rem;position:relative}}
+.chart-label{{font-size:.6rem;text-transform:uppercase;letter-spacing:.12em;color:var(--muted);margin-bottom:.3rem}}
+.chart-cell canvas{{position:absolute;inset:.8rem;inset-top:2rem}}
+
+/* ── FIRE BUTTON ── */
+#fire-btn{{
+  position:fixed;bottom:1.5rem;right:1.5rem;z-index:100;
+  background:linear-gradient(135deg,#3a1a7a,#7c5cfc);
+  border:none;border-radius:50px;padding:.7rem 1.4rem;
+  color:#fff;font-family:'Courier New',monospace;font-size:.75rem;font-weight:700;
+  cursor:pointer;letter-spacing:.06em;
+  box-shadow:0 4px 24px rgba(124,92,252,.5);
+  transition:all .2s;
+}}
+#fire-btn:hover{{transform:translateY(-2px);box-shadow:0 8px 32px rgba(124,92,252,.7)}}
+#fire-btn:active{{transform:translateY(0)}}
+#fire-btn.firing{{background:linear-gradient(135deg,#1a4a1a,#27ae60);box-shadow:0 4px 24px rgba(39,174,96,.5)}}
+
+/* ── FOOTER ── */
+footer{{background:var(--surf);border-top:1px solid var(--border);
+  padding:.6rem 1.4rem;display:flex;justify-content:space-between;align-items:center;font-size:.65rem}}
+footer .links a{{color:var(--muted);margin-left:1rem}}
+footer .links a:hover{{color:var(--text)}}
+footer .copy{{color:#20205a}}
+</style>
+</head>
+<body>
+<div id="stars"></div>
+<div id="app">
+
+<header>
+  <h1>SOVEREIGN-Ω</h1>
+  <div class="eq">Ω(a,t) = [Ψ(t) ≥ Δ(t)] · R(a,t) · e<sup>Λ·t</sup></div>
+  <div class="tagline">Truth or silence. The silence is information. · Pharos Chain · TRION Mathematics</div>
+  <div id="conn-badge">⟳ Connecting to live intelligence stream…</div>
+</header>
+
+<main>
+
+  <!-- Ψ Gauge -->
+  <div class="panel" id="gauge-panel">
+    <div class="panel-title">Ψ Coherence Score — live</div>
+    <div id="gauge-wrap">
+      <svg id="gauge-svg" viewBox="0 0 200 200">
+        <!-- bg arc -->
+        <path id="arc-bg" d="" fill="none" stroke="#0f0f28" stroke-width="16" stroke-linecap="round"/>
+        <!-- delta marker -->
+        <path id="arc-delta" d="" fill="none" stroke="#f39c12" stroke-width="2" stroke-dasharray="4 3" stroke-linecap="round"/>
+        <!-- value arc -->
+        <path id="arc-val" d="" fill="none" stroke="#7c5cfc" stroke-width="16" stroke-linecap="round"/>
+        <!-- delta tick -->
+        <line id="delta-tick" x1="100" y1="100" x2="100" y2="60" stroke="#f39c12" stroke-width="2"/>
+        <text id="delta-text" x="100" y="50" text-anchor="middle" fill="#f39c12" font-size="10" font-family="Courier New">Δ</text>
+      </svg>
+      <div id="gauge-psi">
+        <div class="psi-num" id="psi-num">0.000</div>
+        <div class="psi-lbl">Ψ(t)</div>
+        <div class="psi-gate silence" id="psi-gate">SILENCE</div>
+      </div>
+    </div>
+    <div id="gauge-delta-lbl">Δ threshold = <span id="delta-val-lbl">0.0000</span></div>
+    <div style="font-size:.65rem;color:#30305a;text-align:center;line-height:1.5;margin-top:.5rem">
+      When Ψ &lt; Δ the agent refuses to act.<br>Silence is not failure. Silence is information.
+    </div>
+  </div>
+
+  <!-- Λ Hero -->
+  <div class="panel" id="lambda-panel">
+    <div class="panel-title">Λ Compounding Moat</div>
+    <div id="lambda-big">—</div>
+    <div id="log-lambda">log(Λ) = —</div>
+    <div id="lambda-growth"></div>
+    <div style="height:.5rem"></div>
+    <div id="cycles-num">—</div>
+    <div id="cycles-lbl">coherent cycles</div>
+    <div style="font-size:.65rem;color:#30305a;margin-top:auto;line-height:1.5">
+      Λ is computed in log-space.<br>It can only grow. Never decreases.<br>Every coherent cycle compounds the moat.
+    </div>
+  </div>
+
+  <!-- Chain -->
+  <div class="panel" id="chain-panel">
+    <div class="panel-title">⛓ Pharos On-Chain</div>
+    <div id="hb-ring">
+      <svg viewBox="0 0 60 60">
+        <circle cx="30" cy="30" r="20" fill="none" stroke="#1a3a1a" stroke-width="2"/>
+        <circle class="hb-pulse" cx="30" cy="30" r="20" fill="none" stroke="#2ecc71" stroke-width="1.5"/>
+        <circle cx="30" cy="30" r="8" fill="#061206" stroke="#2ecc71" stroke-width="2"/>
+        <text x="30" y="34" text-anchor="middle" fill="#2ecc71" font-size="7" font-family="Courier New">⛓</text>
+      </svg>
+    </div>
+    <div id="sync-num">0</div>
+    <div id="sync-lbl">chain syncs this session</div>
+    <div id="sync-next">Next sync in — cycles</div>
+    <div style="font-size:.65rem;color:#30305a;margin-top:auto;line-height:1.6">
+      Network: Pharos Testnet 688689<br>
+      Registry: 0x6EAB…018Ba<br>
+      Vault: 0xAbC1…A7A66<br>
+      Learner: 0x7990…9F84<br>
+      <a href="https://testnet.pharosscan.xyz/address/0xdBbf66CAD621dA3Ec186D18b29a135d2A5d42d20"
+         target="_blank" style="color:#50508a">View on explorer ↗</a>
+    </div>
+  </div>
+
+  <!-- Planes -->
+  <div class="panel" id="planes-panel">
+    <div class="panel-title">5 Cognitive Planes — Ψ breakdown</div>
+    <div class="plane">
+      <div class="plane-top"><span class="plane-name">P · Perceptual  ×0.25</span><span class="plane-val" id="pv-p">0.000</span></div>
+      <div class="bar-bg"><div class="bar-fill" id="pb-p" style="width:0%;background:#9b59b6"></div></div>
+    </div>
+    <div class="plane">
+      <div class="plane-top"><span class="plane-name">I · Inferential ×0.30</span><span class="plane-val" id="pv-i">0.000</span></div>
+      <div class="bar-bg"><div class="bar-fill" id="pb-i" style="width:0%;background:#3498db"></div></div>
+    </div>
+    <div class="plane">
+      <div class="plane-top"><span class="plane-name">C · Consensus   ×0.20</span><span class="plane-val" id="pv-c">0.000</span></div>
+      <div class="bar-bg"><div class="bar-fill" id="pb-c" style="width:0%;background:#1abc9c"></div></div>
+    </div>
+    <div class="plane">
+      <div class="plane-top"><span class="plane-name">S · Self-Reflect ×0.15</span><span class="plane-val" id="pv-s">0.000</span></div>
+      <div class="bar-bg"><div class="bar-fill" id="pb-s" style="width:0%;background:#e67e22"></div></div>
+    </div>
+    <div class="plane">
+      <div class="plane-top"><span class="plane-name">W · World Model ×0.10</span><span class="plane-val" id="pv-w">0.000</span></div>
+      <div class="bar-bg"><div class="bar-fill" id="pb-w" style="width:0%;background:#e74c3c"></div></div>
+    </div>
+    <div style="font-size:.65rem;color:#30305a;margin-top:auto;line-height:1.5">
+      Contradiction → I=0 &nbsp;|&nbsp; World z&gt;3σ → W=0<br>
+      No LLM key → P=0, C reduced
+    </div>
+  </div>
+
+  <!-- Gate Feed -->
+  <div class="panel" id="feed-panel">
+    <div class="panel-title">Gate Decisions — live feed</div>
+    <div id="feed">
+      <div class="feed-row silence">
+        <span class="feed-time">--:--:--</span>
+        <span class="feed-gate">SILENCE</span>
+        <span class="feed-psi">Ψ connecting…</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Chart strip -->
+  <div class="panel" id="chart-panel" style="padding:0">
+    <div id="chart-inner">
+      <div class="chart-cell">
+        <div class="chart-label">Ψ Coherence · 60s rolling</div>
+        <canvas id="psiChart"></canvas>
+      </div>
+      <div class="chart-cell">
+        <div class="chart-label">log(Λ) Moat · 60s rolling</div>
+        <canvas id="lamChart"></canvas>
+      </div>
+    </div>
+  </div>
+
+</main>
+
+<footer>
+  <div class="copy">SOVEREIGN-Ω v2.0.0 · Pharos Phase 1 Hackathon · DoraHacks · June 2026 · 50,000 $PROS</div>
+  <div class="links">
+    <a href="/">Home</a>
+    <a href="/dashboard">Dashboard</a>
+    <a href="/pipeline">Pipeline</a>
+    <a href="/docs">API</a>
+    <a href="/.well-known/agent.json" target="_blank">Agent Card</a>
+  </div>
+</footer>
+
+</div><!-- /app -->
+
+<button id="fire-btn" title="Fire a live action cycle">⚡ Fire Cycle</button>
+
+<script>
+// ── Starfield ───────────────────────────────────────────────────────────────
+(function(){{
+  const c=document.getElementById('stars');
+  for(let i=0;i<120;i++){{
+    const s=document.createElement('div');
+    s.className='star';
+    const sz=Math.random()*2+.5;
+    s.style.cssText=`width:${{sz}}px;height:${{sz}}px;left:${{Math.random()*100}}%;top:${{Math.random()*100}}%;--d:${{(Math.random()*4+2).toFixed(1)}}s;--op:${{(Math.random()*.7+.1).toFixed(2)}};animation-delay:${{(Math.random()*4).toFixed(1)}}s`;
+    c.appendChild(s);
+  }}
+}})();
+
+// ── SVG gauge ───────────────────────────────────────────────────────────────
+const CX=100,CY=100,R=78,START_ANG=-220,SWEEP=260; // degrees
+
+function polar(cx,cy,r,deg){{
+  const a=deg*Math.PI/180;
+  return [cx+r*Math.cos(a),cy+r*Math.sin(a)];
+}}
+
+function arcPath(startDeg,endDeg,r=R){{
+  if(Math.abs(endDeg-startDeg)<.01) return '';
+  const [sx,sy]=polar(CX,CY,r,startDeg);
+  const [ex,ey]=polar(CX,CY,r,endDeg);
+  const large=Math.abs(endDeg-startDeg)>180?1:0;
+  return `M ${{sx}} ${{sy}} A ${{r}} ${{r}} 0 ${{large}} 1 ${{ex}} ${{ey}}`;
+}}
+
+const arcBg=document.getElementById('arc-bg');
+const arcVal=document.getElementById('arc-val');
+const arcDelta=document.getElementById('arc-delta');
+const deltaTick=document.getElementById('delta-tick');
+const deltaText=document.getElementById('delta-text');
+
+arcBg.setAttribute('d',arcPath(START_ANG, START_ANG+SWEEP));
+
+function updateGauge(psi,delta){{
+  const psiDeg  = START_ANG + psi  * SWEEP;
+  const deltaDeg= START_ANG + delta* SWEEP;
+  arcVal.setAttribute('d', arcPath(START_ANG, psiDeg));
+  const color = psi>=delta ? '#2ecc71' : '#7c5cfc';
+  arcVal.setAttribute('stroke', color);
+
+  // delta marker arc
+  const dPath=arcPath(deltaDeg-2, deltaDeg+2, R);
+  arcDelta.setAttribute('d', dPath || arcPath(deltaDeg-.5,deltaDeg+.5,R));
+
+  // delta tick
+  const [tx1,ty1]=polar(CX,CY,R-8,deltaDeg);
+  const [tx2,ty2]=polar(CX,CY,R+8,deltaDeg);
+  deltaTick.setAttribute('x1',tx1); deltaTick.setAttribute('y1',ty1);
+  deltaTick.setAttribute('x2',tx2); deltaTick.setAttribute('y2',ty2);
+  const [lx,ly]=polar(CX,CY,R+18,deltaDeg);
+  deltaText.setAttribute('x',lx); deltaText.setAttribute('y',ly);
+}}
+
+// ── Charts ──────────────────────────────────────────────────────────────────
+const W=60;
+function makeChart(id,color,yMin=0,yMax=1){{
+  return new Chart(document.getElementById(id).getContext('2d'),{{
+    type:'line',
+    data:{{
+      labels:Array(W).fill(''),
+      datasets:[{{data:Array(W).fill(null),borderColor:color,
+        backgroundColor:color.replace('rgb','rgba').replace(')',',0.06)'),
+        borderWidth:1.5,pointRadius:0,tension:.4,fill:true}}]
+    }},
+    options:{{
+      animation:{{duration:300}},responsive:true,maintainAspectRatio:false,
+      plugins:{{legend:{{display:false}},tooltip:{{enabled:false}}}},
+      scales:{{
+        x:{{display:false}},
+        y:{{min:yMin,max:yMax,grid:{{color:'rgba(22,22,58,.8)'}},
+          ticks:{{color:'#30306a',font:{{size:9}},maxTicksLimit:4}}}}
+      }}
+    }}
+  }});
+}}
+
+const psiChart=makeChart('psiChart','rgb(124,92,252)',0,1);
+const lamChart=makeChart('lamChart','rgb(46,204,113)',0,null);
+let maxLogLam=55;
+
+function pushChart(ch,v){{
+  ch.data.datasets[0].data.push(v);
+  if(ch.data.datasets[0].data.length>W) ch.data.datasets[0].data.shift();
+  ch.data.labels.push('');
+  if(ch.data.labels.length>W) ch.data.labels.shift();
+  ch.update('none');
+}}
+
+// ── Gate feed ────────────────────────────────────────────────────────────────
+const feedEl=document.getElementById('feed');
+const history=[];
+function addFeed(gate,psi,ts){{
+  history.unshift({{gate,psi,ts}});
+  if(history.length>40) history.pop();
+  feedEl.innerHTML=history.map(f=>{{
+    const t=new Date(f.ts).toTimeString().slice(0,8);
+    const cls=f.gate==='OPEN'?'open':'silence';
+    return `<div class="feed-row ${{cls}}"><span class="feed-time">${{t}}</span><span class="feed-gate">${{f.gate}}</span><span class="feed-psi">Ψ=${{f.psi.toFixed(4)}}</span></div>`;
+  }}).join('');
+}}
+
+// ── Helpers ──────────────────────────────────────────────────────────────────
+function fmtBig(n){{
+  if(!n&&n!==0) return '—';
+  if(n>=1e18) return n.toExponential(3);
+  if(n>=1e12) return (n/1e12).toFixed(3)+'T';
+  if(n>=1e9)  return (n/1e9).toFixed(3)+'B';
+  return n.toFixed(4);
+}}
+let prevLam=null;
+
+// ── WebSocket ────────────────────────────────────────────────────────────────
+const badge=document.getElementById('conn-badge');
+let lastSeq=-1;
+
+function connect(){{
+  badge.textContent='⟳ Connecting…';badge.className='';
+  const ws=new WebSocket('{ws_url}');
+
+  ws.onopen=()=>{{badge.textContent='● LIVE';badge.className='live'}};
+
+  ws.onmessage=(e)=>{{
+    let d;try{{d=JSON.parse(e.data)}}catch{{return}}
+    if(d.type!=='state') return;
+
+    const psi=d.psi||0, delta=d.delta||0, gate=d.gate||'SILENCE';
+    const planes=d.planes||{{}};
+
+    // gauge
+    updateGauge(Math.min(psi,1),Math.min(delta,1));
+    document.getElementById('psi-num').textContent=psi.toFixed(4);
+    document.getElementById('delta-val-lbl').textContent=delta.toFixed(4);
+    const gateEl=document.getElementById('psi-gate');
+    gateEl.textContent=gate;
+    gateEl.className='psi-gate '+(gate==='OPEN'?'open':'silence');
+
+    // lambda
+    const lam=d.lambda, logLam=d.log_lambda;
+    document.getElementById('lambda-big').textContent=fmtBig(lam);
+    document.getElementById('log-lambda').textContent=`log(Λ) = ${{(logLam||0).toFixed(4)}}`;
+    if(prevLam!==null&&lam>prevLam){{
+      const growth=((lam-prevLam)/prevLam*100);
+      document.getElementById('lambda-growth').textContent=`▲ +${{growth.toExponential(2)}} this frame`;
+    }}
+    prevLam=lam;
+    document.getElementById('cycles-num').textContent=(d.cycles||0).toLocaleString();
+
+    // chain
+    document.getElementById('sync-num').textContent=d.chain_syncs??0;
+    document.getElementById('sync-next').textContent=`Next sync in ${{d.next_sync_in??'—'}} cycles`;
+
+    // planes
+    [['p','pb-p','pv-p'],['i','pb-i','pv-i'],['c','pb-c','pv-c'],['s','pb-s','pv-s'],['w','pb-w','pv-w']].forEach(([k,bid,vid])=>{{
+      const v=planes[k]??0;
+      document.getElementById(bid).style.width=(v*100).toFixed(1)+'%';
+      document.getElementById(vid).textContent=v.toFixed(4);
+    }});
+
+    // charts
+    pushChart(psiChart,psi);
+    if(logLam!=null){{
+      maxLogLam=Math.max(maxLogLam,(logLam||0)*1.02);
+      lamChart.options.scales.y.max=Math.ceil(maxLogLam);
+      pushChart(lamChart,logLam);
+    }}
+
+    // feed (every frame + on gate change)
+    if(d.seq!==lastSeq&&(d.seq%1===0)) addFeed(gate,psi,d.ts||new Date().toISOString());
+    lastSeq=d.seq;
+  }};
+
+  ws.onerror=()=>{{badge.textContent='✗ Error';badge.className=''}};
+  ws.onclose=()=>{{badge.textContent='↻ Reconnecting…';badge.className='';setTimeout(connect,3000)}};
+}}
+
+// ── Fire button ───────────────────────────────────────────────────────────────
+const fireBtn=document.getElementById('fire-btn');
+let firing=false;
+fireBtn.addEventListener('click',async()=>{{
+  if(firing) return;
+  firing=true;
+  fireBtn.textContent='⟳ Firing…';
+  fireBtn.className='firing';
+  try{{
+    const r=await fetch('{action_url}',{{
+      method:'POST',
+      headers:{{'Content-Type':'application/json'}},
+      body:JSON.stringify({{
+        query:'Live demo cycle: evaluating current market coherence',
+        domain:'trading',
+        context:{{
+          volatility:0.15,novelty:0.30,
+          input_channels:{{'price_feed':[95100,95200,95050,95280]}},
+          environmental_signals:{{'vix':17.5,'btc_dom':52.1}}
+        }}
+      }})
+    }});
+    const d=await r.json();
+    const gLabel=d.gate_open?'OPEN':'SILENCE';
+    addFeed(gLabel,d.psi_score||0,new Date().toISOString());
+    fireBtn.textContent=`${{gLabel}} · Ψ=${{(d.psi_score||0).toFixed(4)}}`;
+    setTimeout(()=>{{fireBtn.textContent='⚡ Fire Cycle';fireBtn.className='';firing=false}},2500);
+  }}catch(err){{
+    fireBtn.textContent='✗ Error — retry';
+    fireBtn.className='';
+    firing=false;
+  }}
+}});
+
+// ── Boot ──────────────────────────────────────────────────────────────────────
+updateGauge(0,0.72);
+connect();
+</script>
+</body>
+</html>"""
