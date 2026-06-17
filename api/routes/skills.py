@@ -27,7 +27,7 @@ SKILLS_MANIFEST = {
     ),
     "version": "2.0.0",
     "chain": "Pharos",
-    "chain_id_testnet": 688688,
+    "chain_id_testnet": 688689,
     "chain_id_mainnet": 1672,
     "x402_enabled": True,
     "x402_accepted_tokens": ["PROS", "USDC"],

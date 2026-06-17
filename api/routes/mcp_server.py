@@ -270,7 +270,7 @@ async def mcp_manifest(request: Request) -> JSONResponse:
         "agent": {
             "description": "Autonomous intelligence agent governed by TRION mathematics.",
             "chain": "Pharos",
-            "chain_id_testnet": 688688,
+            "chain_id_testnet": 688689,
             "chain_id_mainnet": 1672,
             "x402_enabled": True,
         },

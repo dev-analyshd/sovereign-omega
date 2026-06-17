@@ -1,0 +1,113 @@
+{
+  "_format": "hh-sol-cache-2",
+  "files": {
+    "/home/runner/workspace/pharos/contracts/deploy/contracts/SovereignLearner.sol": {
+      "lastModificationDate": 1781657580142,
+      "contentHash": "4fcba12a6efeda9501a648669a12c45c",
+      "sourceName": "contracts/SovereignLearner.sol",
+      "solcConfig": {
+        "version": "0.8.24",
+        "settings": {
+          "optimizer": {
+            "enabled": true,
+            "runs": 200
+          },
+          "evmVersion": "paris",
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          }
+        }
+      },
+      "imports": [],
+      "versionPragmas": [
+        "^0.8.24"
+      ],
+      "artifacts": [
+        "SovereignLearner"
+      ]
+    },
+    "/home/runner/workspace/pharos/contracts/deploy/contracts/SovereignRegistry.sol": {
+      "lastModificationDate": 1781657580142,
+      "contentHash": "350d5959e68fde992614d838fa1c1ef2",
+      "sourceName": "contracts/SovereignRegistry.sol",
+      "solcConfig": {
+        "version": "0.8.24",
+        "settings": {
+          "optimizer": {
+            "enabled": true,
+            "runs": 200
+          },
+          "evmVersion": "paris",
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          }
+        }
+      },
+      "imports": [],
+      "versionPragmas": [
+        "^0.8.24"
+      ],
+      "artifacts": [
+        "SovereignRegistry"
+      ]
+    },
+    "/home/runner/workspace/pharos/contracts/deploy/contracts/SovereignVault.sol": {
+      "lastModificationDate": 1781657580142,
+      "contentHash": "20828f8b3ce48c2ea709c5cb62b552b9",
+      "sourceName": "contracts/SovereignVault.sol",
+      "solcConfig": {
+        "version": "0.8.24",
+        "settings": {
+          "optimizer": {
+            "enabled": true,
+            "runs": 200
+          },
+          "evmVersion": "paris",
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          }
+        }
+      },
+      "imports": [],
+      "versionPragmas": [
+        "^0.8.24"
+      ],
+      "artifacts": [
+        "SovereignVault"
+      ]
+    }
+  }
+}

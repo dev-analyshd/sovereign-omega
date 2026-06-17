@@ -13,11 +13,11 @@ module.exports = {
   },
   networks: {
     pharos_testnet: {
-      url: "https://testnet.pharosnetwork.xyz",
-      chainId: 688688,
+      url: "https://atlantic.dplabs-internal.com",
+      chainId: 688689,
       accounts,
       gasPrice: "auto",
-      timeout: 60000
+      timeout: 120000
     },
     pharos_mainnet: {
       url: "https://rpc.pharos.xyz",
@@ -35,10 +35,10 @@ module.exports = {
     customChains: [
       {
         network: "pharos_testnet",
-        chainId: 688688,
+        chainId: 688689,
         urls: {
-          apiURL: "https://testnet.pharosscan.xyz/api",
-          browserURL: "https://testnet.pharosscan.xyz"
+          apiURL: "https://api.socialscan.io/pharos-testnet/v1/explorer/command_api",
+          browserURL: "https://pharos-testnet.socialscan.io"
         }
       },
       {

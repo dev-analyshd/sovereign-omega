@@ -45,7 +45,7 @@ def _agent_card() -> dict:
         "chain": {
             "name": "Pharos",
             "network": os.getenv("PHAROS_NETWORK", "testnet"),
-            "chain_id_testnet": 688688,
+            "chain_id_testnet": 688689,
             "chain_id_mainnet": 1672,
             "contracts": {
                 "registry": os.getenv("PHAROS_REGISTRY", ""),

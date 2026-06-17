@@ -1,0 +1,8 @@
+{
+  "network": "pharos_testnet",
+  "timestamp": "2026-06-17T01:46:22.368Z",
+  "deployer": "0xdBbf66CAD621dA3Ec186D18b29a135d2A5d42d20",
+  "registry": "0x6EAB7862385329BdaaD32f2b9587a66E768018Ba",
+  "vault": "0xAbC106D943a6Aff91A0B29f4a77E4009323d7A66",
+  "learner": "0x799006C9b1e946d3A2909b81F3C3087D71bB9F84"
+}

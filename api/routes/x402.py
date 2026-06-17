@@ -22,8 +22,8 @@ FACILITATOR_URL = "https://x402.pharos.xyz/facilitator"
 
 PAYMENT_TARGETS = {
     "testnet": {
-        "chain_id": 688688,
-        "rpc": "https://testnet.pharosnetwork.xyz",
+        "chain_id": 688689,
+        "rpc": "https://atlantic.dplabs-internal.com",
         "pros_address": "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE",  # native PROS
         "usdc_address": "0x0000000000000000000000000000000000000000",   # fill after deploy
     },

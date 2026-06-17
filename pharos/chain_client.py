@@ -18,8 +18,8 @@ class PharosClient:
     MAINNET_RPC = "https://rpc.pharos.xyz"
     MAINNET_CHAIN = 1672
 
-    TESTNET_RPC = "https://testnet.pharosnetwork.xyz"
-    TESTNET_CHAIN = 688688
+    TESTNET_RPC = "https://atlantic.dplabs-internal.com"
+    TESTNET_CHAIN = 688689
 
     def __init__(self):
         network = os.getenv("PHAROS_NETWORK", "testnet")
