@@ -1,0 +1,457 @@
+{
+  "contractName": "SovereignVault",
+  "abi": [
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "_agentOperator",
+          "type": "address"
+        },
+        {
+          "internalType": "address",
+          "name": "_registryContract",
+          "type": "address"
+        }
+      ],
+      "stateMutability": "nonpayable",
+      "type": "constructor"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": true,
+          "internalType": "address",
+          "name": "depositor",
+          "type": "address"
+        },
+        {
+          "indexed": false,
+          "internalType": "uint256",
+          "name": "amount",
+          "type": "uint256"
+        }
+      ],
+      "name": "Deposit",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": false,
+          "internalType": "uint256",
+          "name": "psiScaled",
+          "type": "uint256"
+        },
+        {
+          "indexed": false,
+          "internalType": "uint256",
+          "name": "deltaScaled",
+          "type": "uint256"
+        }
+      ],
+      "name": "SilenceBlockedTrade",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": true,
+          "internalType": "bytes32",
+          "name": "tradeId",
+          "type": "bytes32"
+        },
+        {
+          "indexed": false,
+          "internalType": "int256",
+          "name": "pnl",
+          "type": "int256"
+        },
+        {
+          "indexed": false,
+          "internalType": "uint256",
+          "name": "exitPrice",
+          "type": "uint256"
+        }
+      ],
+      "name": "TradeClosed",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": true,
+          "internalType": "bytes32",
+          "name": "tradeId",
+          "type": "bytes32"
+        },
+        {
+          "indexed": false,
+          "internalType": "string",
+          "name": "symbol",
+          "type": "string"
+        },
+        {
+          "indexed": false,
+          "internalType": "string",
+          "name": "direction",
+          "type": "string"
+        },
+        {
+          "indexed": false,
+          "internalType": "uint256",
+          "name": "size",
+          "type": "uint256"
+        },
+        {
+          "indexed": false,
+          "internalType": "uint256",
+          "name": "psiScaled",
+          "type": "uint256"
+        }
+      ],
+      "name": "TradeOpened",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": true,
+          "internalType": "address",
+          "name": "recipient",
+          "type": "address"
+        },
+        {
+          "indexed": false,
+          "internalType": "uint256",
+          "name": "amount",
+          "type": "uint256"
+        }
+      ],
+      "name": "Withdraw",
+      "type": "event"
+    },
+    {
+      "inputs": [],
+      "name": "MAX_POSITION_BPS",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "agentOperator",
+      "outputs": [
+        {
+          "internalType": "address",
+          "name": "",
+          "type": "address"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "bytes32",
+          "name": "tradeId",
+          "type": "bytes32"
+        },
+        {
+          "internalType": "uint256",
+          "name": "exitPriceScaled",
+          "type": "uint256"
+        },
+        {
+          "internalType": "int256",
+          "name": "pnlScaled",
+          "type": "int256"
+        }
+      ],
+      "name": "closeTrade",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "getVaultStats",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "balance",
+          "type": "uint256"
+        },
+        {
+          "internalType": "uint256",
+          "name": "deposited",
+          "type": "uint256"
+        },
+        {
+          "internalType": "uint256",
+          "name": "totalTradesCount",
+          "type": "uint256"
+        },
+        {
+          "internalType": "uint256",
+          "name": "wins",
+          "type": "uint256"
+        },
+        {
+          "internalType": "uint256",
+          "name": "totalPnLValue",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "bytes32",
+          "name": "tradeId",
+          "type": "bytes32"
+        },
+        {
+          "internalType": "string",
+          "name": "symbol",
+          "type": "string"
+        },
+        {
+          "internalType": "string",
+          "name": "direction",
+          "type": "string"
+        },
+        {
+          "internalType": "uint256",
+          "name": "sizeScaled",
+          "type": "uint256"
+        },
+        {
+          "internalType": "uint256",
+          "name": "entryPriceScaled",
+          "type": "uint256"
+        },
+        {
+          "internalType": "uint256",
+          "name": "psiScaled",
+          "type": "uint256"
+        },
+        {
+          "internalType": "uint256",
+          "name": "deltaScaled",
+          "type": "uint256"
+        }
+      ],
+      "name": "openTrade",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "owner",
+      "outputs": [
+        {
+          "internalType": "address",
+          "name": "",
+          "type": "address"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "psiScaled",
+          "type": "uint256"
+        },
+        {
+          "internalType": "uint256",
+          "name": "deltaScaled",
+          "type": "uint256"
+        }
+      ],
+      "name": "recordSilencedTrade",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "registryContract",
+      "outputs": [
+        {
+          "internalType": "address",
+          "name": "",
+          "type": "address"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "totalDeposited",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "totalPnL",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "totalTrades",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "name": "tradeIds",
+      "outputs": [
+        {
+          "internalType": "bytes32",
+          "name": "",
+          "type": "bytes32"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "bytes32",
+          "name": "",
+          "type": "bytes32"
+        }
+      ],
+      "name": "trades",
+      "outputs": [
+        {
+          "internalType": "bytes32",
+          "name": "tradeId",
+          "type": "bytes32"
+        },
+        {
+          "internalType": "string",
+          "name": "symbol",
+          "type": "string"
+        },
+        {
+          "internalType": "string",
+          "name": "direction",
+          "type": "string"
+        },
+        {
+          "internalType": "uint256",
+          "name": "entryPrice",
+          "type": "uint256"
+        },
+        {
+          "internalType": "uint256",
+          "name": "size",
+          "type": "uint256"
+        },
+        {
+          "internalType": "uint256",
+          "name": "psiAtEntry",
+          "type": "uint256"
+        },
+        {
+          "internalType": "uint256",
+          "name": "timestamp",
+          "type": "uint256"
+        },
+        {
+          "internalType": "bool",
+          "name": "closed",
+          "type": "bool"
+        },
+        {
+          "internalType": "int256",
+          "name": "pnl",
+          "type": "int256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "winningTrades",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "amount",
+          "type": "uint256"
+        }
+      ],
+      "name": "withdraw",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "stateMutability": "payable",
+      "type": "receive"
+    }
+  ],
+  "bytecode": "0x608060405234801561001057600080fd5b50604051610fdf380380610fdf83398101604081905261002f91610087565b600080546001600160a01b03199081163317909155600180546001600160a01b03948516908316179055600280549290931691161790556100ba565b80516001600160a01b038116811461008257600080fd5b919050565b6000806040838503121561009a57600080fd5b6100a38361006b565b91506100b16020840161006b565b90509250929050565b610f16806100c96000396000f3fe6080604052600436106100eb5760003560e01c806387be79ad1161008a578063e275c99711610059578063e275c997146102fc578063e2990cd014610312578063ff50abdc14610328578063ff52c4841461033e57600080fd5b806387be79ad1461025f5780638da5cb5b1461027f57806398f553341461029f578063a59aa5a6146102b457600080fd5b806328c1f99b116100c657806328c1f99b146101db5780632e1a7d4d146101fb5780633c08aea11461021b5780638503ec621461023b57600080fd5b80621624201461014357806308de5e9114610181578063218c825f146101b957600080fd5b3661013e5734600360008282546101029190610aaa565b909155505060405134815233907fe1fffcc4923d04b559f4d29a8bfc6cda04eb5b0d3c460751c2402c5c5cc9109c9060200160405180910390a2005b600080fd5b34801561014f57600080fd5b5061016361015e366004610ac3565b61035e565b60405161017899989796959493929190610b22565b60405180910390f35b34801561018d57600080fd5b506001546101a1906001600160a01b031681565b6040516001600160a01b039091168152602001610178565b3480156101c557600080fd5b506101d96101d4366004610b87565b6104bb565b005b3480156101e757600080fd5b506002546101a1906001600160a01b031681565b34801561020757600080fd5b506101d9610216366004610ac3565b6105eb565b34801561022757600080fd5b506101d9610236366004610bfc565b6106f8565b34801561024757600080fd5b5061025160065481565b604051908152602001610178565b34801561026b57600080fd5b506101d961027a366004610c96565b6109f7565b34801561028b57600080fd5b506000546101a1906001600160a01b031681565b3480156102ab57600080fd5b5061025160c881565b3480156102c057600080fd5b506102d46003546005546006546004544794565b604080519586526020860194909452928401919091526060830152608082015260a001610178565b34801561030857600080fd5b5061025160055481565b34801561031e57600080fd5b5061025160045481565b34801561033457600080fd5b5061025160035481565b34801561034a57600080fd5b50610251610359366004610ac3565b610a73565b6007602052600090815260409020805460018201805491929161038090610cb8565b80601f01602080910402602001604051908101604052809291908181526020018280546103ac90610cb8565b80156103f95780601f106103ce576101008083540402835291602001916103f9565b820191906000526020600020905b8154815290600101906020018083116103dc57829003601f168201915b50505050509080600201805461040e90610cb8565b80601f016020809104026020016040519081016040528092919081815260200182805461043a90610cb8565b80156104875780601f1061045c57610100808354040283529160200191610487565b820191906000526020600020905b81548152906001019060200180831161046a57829003601f168201915b50505060038401546004850154600586015460068701546007880154600890980154969793969295509093509160ff169089565b6001546001600160a01b03163314806104de57506000546001600160a01b031633145b6105035760405162461bcd60e51b81526004016104fa90610cf2565b60405180910390fd5b60008381526007602081905260409091209081015460ff16156105595760405162461bcd60e51b815260206004820152600e60248201526d105b1c9958591e4818db1bdcd95960921b60448201526064016104fa565b60078101805460ff191660011790556008810182905560008213156105aa5760016006600082825461058b9190610aaa565b9250508190555081600460008282546105a49190610aaa565b90915550505b604080518381526020810185905285917f743e85dc170c26b5c2cff72fabbb36b040f0d33d0af22828152d792b5f81a86b910160405180910390a250505050565b6000546001600160a01b031633146106325760405162461bcd60e51b815260206004820152600a60248201526927b7363c9037bbb732b960b11b60448201526064016104fa565b804710156106795760405162461bcd60e51b8152602060048201526014602482015273496e73756666696369656e742062616c616e636560601b60448201526064016104fa565b600080546040516001600160a01b039091169183156108fc02918491818181858888f193505050501580156106b2573d6000803e3d6000fd5b506000546040518281526001600160a01b03909116907f884edad9ce6fa2440d8a54cc123490eb96d2768479d49ff9c7366125a94243649060200160405180910390a250565b6001546001600160a01b031633148061071b57506000546001600160a01b031633145b6107375760405162461bcd60e51b81526004016104fa90610cf2565b808210156107a65760405162461bcd60e51b815260206004820152603660248201527f53494c454e43453a20507369203c2044656c74612e20547261646520626c6f6360448201527535b2b210313c9031b7b432b932b731b29033b0ba329760511b60648201526084016104fa565b60006127106107b660c847610d1a565b6107c09190610d31565b90506107d481670de0b6b3a7640000610d1a565b8511156108235760405162461bcd60e51b815260206004820152601f60248201527f506f736974696f6e2065786365656473203225207661756c74206c696d69740060448201526064016104fa565b6040518061012001604052808b81526020018a8a8080601f016020809104026020016040519081016040528093929190818152602001838380828437600092019190915250505090825250604080516020601f8b0181900481028201810190925289815291810191908a908a90819084018382808284376000920182905250938552505050602080830188905260408084018a90526060840188905242608085015260a0840183905260c09093018290528d825260078152919020825181559082015160018201906108f59082610dba565b506040820151600282019061090a9082610dba565b50606082015160038201556080820151600482015560a082015160058083019190915560c0830151600683015560e083015160078301805460ff19169115159190911790556101009092015160089182015580546001818101835560009283527ff3f7a9fe364faab93b216da50a3214154f22a0a2b415b23a84c8169e8b636ee39091018d90558254909291906109a2908490610aaa565b92505081905550897f0b8cf51b0f9fbea0a7de9849f46b808e84a96573dcb4ebb9b1f50a4260fa76528a8a8a8a8a896040516109e396959493929190610ea3565b60405180910390a250505050505050505050565b6001546001600160a01b0316331480610a1a57506000546001600160a01b031633145b610a365760405162461bcd60e51b81526004016104fa90610cf2565b60408051838152602081018390527f4cdba51a93caa6e04d5091fe6c93fcfa2474ff8d739b1b13a3340926e488a24a910160405180910390a15050565b60088181548110610a8357600080fd5b600091825260209091200154905081565b634e487b7160e01b600052601160045260246000fd5b80820180821115610abd57610abd610a94565b92915050565b600060208284031215610ad557600080fd5b5035919050565b6000815180845260005b81811015610b0257602081850181015186830182015201610ae6565b506000602082860101526020601f19601f83011685010191505092915050565b60006101208b8352806020840152610b3c8184018c610adc565b90508281036040840152610b50818b610adc565b60608401999099525050608081019590955260a085019390935260c0840191909152151560e0830152610100909101529392505050565b600080600060608486031215610b9c57600080fd5b505081359360208301359350604090920135919050565b60008083601f840112610bc557600080fd5b50813567ffffffffffffffff811115610bdd57600080fd5b602083019150836020828501011115610bf557600080fd5b9250929050565b600080600080600080600080600060e08a8c031215610c1a57600080fd5b8935985060208a013567ffffffffffffffff80821115610c3957600080fd5b610c458d838e01610bb3565b909a50985060408c0135915080821115610c5e57600080fd5b50610c6b8c828d01610bb3565b9a9d999c50979a9799986060890135986080810135985060a0810135975060c0013595509350505050565b60008060408385031215610ca957600080fd5b50508035926020909101359150565b600181811c90821680610ccc57607f821691505b602082108103610cec57634e487b7160e01b600052602260045260246000fd5b50919050565b6020808252600e908201526d139bdd08185d5d1a1bdc9a5e995960921b604082015260600190565b8082028115828204841417610abd57610abd610a94565b600082610d4e57634e487b7160e01b600052601260045260246000fd5b500490565b634e487b7160e01b600052604160045260246000fd5b601f821115610db5576000816000526020600020601f850160051c81016020861015610d925750805b601f850160051c820191505b81811015610db157828155600101610d9e565b5050505b505050565b815167ffffffffffffffff811115610dd457610dd4610d53565b610de881610de28454610cb8565b84610d69565b602080601f831160018114610e1d5760008415610e055750858301515b600019600386901b1c1916600185901b178555610db1565b600085815260208120601f198616915b82811015610e4c57888601518255948401946001909101908401610e2d565b5085821015610e6a5787850151600019600388901b60f8161c191681555b5050505050600190811b01905550565b81835281816020850137506000828201602090810191909152601f909101601f19169091010190565b608081526000610eb760808301888a610e7a565b8281036020840152610eca818789610e7a565b604084019590955250506060015294935050505056fea26469706673582212204e1e693b6997a2cf407457afc987a0c828c12bfc136e1c7a76e3bd93a5ce904764736f6c63430008180033"
+}
