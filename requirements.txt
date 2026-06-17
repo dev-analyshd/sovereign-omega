@@ -31,3 +31,28 @@ prometheus-client>=0.21.0
 
 # Misc
 python-dotenv>=1.0.0
+fastapi
+httpx
+pydantic
+python-dotenv
+uvicorn
+anthropic
+asyncpg
+ccxt
+discord.py
+eth-account
+faiss-cpu
+fastapi
+httpx
+maturin
+numpy
+pandas
+pandas-ta
+prometheus-client
+pydantic
+python-dotenv
+python-telegram-bot
+sentence-transformers
+tweepy
+uvicorn[standard]
+web3
