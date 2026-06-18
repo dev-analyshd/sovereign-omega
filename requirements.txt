@@ -34,3 +34,8 @@ httpx
 pydantic
 python-dotenv
 uvicorn
+fastapi
+httpx
+pydantic
+python-dotenv
+uvicorn
