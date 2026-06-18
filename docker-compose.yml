@@ -8,18 +8,35 @@ services:
     env_file:
       - .env
     environment:
-      - DEPLOYER_PRIVATE_KEY=${DEPLOYER_PRIVATE_KEY}
-      - SESSION_SECRET=${SESSION_SECRET}
+      # ── Pharos Chain ─────────────────────────────────────────────────────────
       - PHAROS_NETWORK=${PHAROS_NETWORK:-testnet}
+      - PHAROS_REGISTRY=${PHAROS_REGISTRY:-0x6EAB7862385329BdaaD32f2b9587a66E768018Ba}
+      - PHAROS_VAULT=${PHAROS_VAULT:-0xAbC106D943a6Aff91A0B29f4a77E4009323d7A66}
+      - PHAROS_LEARNER=${PHAROS_LEARNER:-0x799006C9b1e946d3A2909b81F3C3087D71bB9F84}
+      - AGENT_OPERATOR_ADDRESS=${AGENT_OPERATOR_ADDRESS:-0xdBbf66CAD621dA3Ec186D18b29a135d2A5d42d20}
+      - DEPLOYER_PRIVATE_KEY=${DEPLOYER_PRIVATE_KEY}
+      # ── Trading ──────────────────────────────────────────────────────────────
+      - TRADING_ENABLED=${TRADING_ENABLED:-true}
+      # ── AI Reasoning (pick one — NVIDIA preferred, falls back to Anthropic) ──
+      - NVIDIA_API_KEY=${NVIDIA_API_KEY:-}
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY:-}
+      # ── Database ─────────────────────────────────────────────────────────────
+      - DATABASE_URL=postgresql://sovereign:${POSTGRES_PASSWORD:-dev_only_change_me}@db:5432/sovereign_omega
+      - TIMESCALE_URL=${TIMESCALE_URL:-}
+      # ── Server ───────────────────────────────────────────────────────────────
+      - SESSION_SECRET=${SESSION_SECRET:-change_me_in_production}
+      - PORT=8000
     volumes:
-      - ./data:/app/data
+      - ./data:/app/data                         # moat accumulator state
+      - faiss_index:/app/memory/faiss_index      # FAISS 384-dim vector memory (persist across restarts)
+      - ./logs:/app/logs
     restart: unless-stopped
     depends_on:
       db:
         condition: service_healthy
 
   db:
-    image: postgres:16
+    image: timescale/timescaledb:latest-pg16     # TimescaleDB = Postgres + time-series extensions
     environment:
       POSTGRES_DB: sovereign_omega
       POSTGRES_USER: sovereign
@@ -30,7 +47,10 @@ services:
     healthcheck:
       test: ["CMD", "pg_isready", "-U", "sovereign"]
       interval: 5s
-      retries: 5
+      timeout: 5s
+      retries: 10
+    restart: unless-stopped
 
 volumes:
   postgres_data:
+  faiss_index:       # Named volume keeps FAISS index alive across container restarts
