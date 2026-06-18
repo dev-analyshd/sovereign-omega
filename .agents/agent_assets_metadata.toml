@@ -11,3 +11,9 @@ id = "8qhEasn3gcDSjCsMgJL2V"
 uri = "file://attached_assets/sovereign_omega_logo.png"
 type = "image"
 title = "SOVEREIGN-Ω Logo"
+
+[[outputs]]
+id = "-gv_t9zDviO0civAcUsXi"
+uri = "file://attached_assets/sovereign_omega_logo_480.png"
+type = "image"
+title = "SOVEREIGN-Ω Logo — 480×480 for DoraHacks"
