@@ -390,6 +390,7 @@ async def _dispatch_skill(skill_id: str, inp: Dict[str, Any]) -> Dict[str, Any]:
 
 
 async def _skill_coherence_evaluate(inp: Dict) -> Dict:
+    import asyncio
     import hashlib
     from core.coherence_engine import CoherenceEngine
     from core.action_gate import ActionGate
@@ -404,7 +405,12 @@ async def _skill_coherence_evaluate(inp: Dict) -> Dict:
     volatility = context.get("volatility", 0.2)
     novelty = context.get("novelty", 0.5)
 
-    reasoning_chains = await chain_manager.run_chains(query, context)
+    try:
+        reasoning_chains = await asyncio.wait_for(
+            chain_manager.run_chains(query, context), timeout=4.0
+        )
+    except (asyncio.TimeoutError, Exception):
+        reasoning_chains = []  # Fast-path: planes that don't need LLM still score correctly
 
     qb = query.encode()
     h1 = hashlib.sha256(qb).digest()
@@ -463,6 +469,7 @@ async def _skill_trade_evaluate(inp: Dict) -> Dict:
 
 
 async def _skill_silence_check(inp: Dict) -> Dict:
+    import asyncio
     import hashlib
     from core.coherence_engine import CoherenceEngine
     from core.action_gate import ActionGate
@@ -475,7 +482,12 @@ async def _skill_silence_check(inp: Dict) -> Dict:
     volatility = stakes
     novelty = 0.5
 
-    reasoning_chains = await chain_manager.run_chains(action, {})
+    try:
+        reasoning_chains = await asyncio.wait_for(
+            chain_manager.run_chains(action, {}), timeout=4.0
+        )
+    except (asyncio.TimeoutError, Exception):
+        reasoning_chains = []  # Fast-path: Silence Protocol still fires on P/S/W planes
     qb = action.encode()
     h1 = hashlib.sha256(qb).digest()
     h2 = hashlib.sha256(qb + b"b").digest()

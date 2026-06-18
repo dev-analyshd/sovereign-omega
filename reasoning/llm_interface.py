@@ -43,7 +43,7 @@ class LLMInterface:
                 timeout=httpx.Timeout(connect=10.0, read=45.0, write=10.0, pool=10.0),
                 limits=httpx.Limits(max_connections=10, max_keepalive_connections=5),
             )
-            self._nvidia_sem = asyncio.Semaphore(1)
+            self._nvidia_sem = asyncio.Semaphore(5)
             print("[LLM] Using NVIDIA NIM API (Llama-3.3-70B)")
             return
 

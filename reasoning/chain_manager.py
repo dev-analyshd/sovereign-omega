@@ -27,11 +27,10 @@ class ChainManager:
     async def _run_single_chain(self, query: str, context: dict, chain_idx: int) -> Dict:
         # Stagger chain completion times so tau_ij drives meaningful consensus weight.
         # Consensus formula: weight = 1 - e^(-tau_ij / TAU_REF=5).
-        # elapsed_ms must be measured from the SAME common origin across all chains
-        # so that tau_ij = |elapsed_i - elapsed_j| reflects real spread, not just LLM time.
-        # Chain 0 → ~0ms, chain 1 → ~900ms, chain 4 → ~3600ms → tau_ij=3600ms → weight≈0.51
+        # Reduced stagger (200ms × idx) keeps skill latency under 3s while still
+        # providing meaningful tau spread (0–800ms) for consensus scoring.
         chain_origin = time.time()  # Record BEFORE sleep — common-origin clock
-        await asyncio.sleep(chain_idx * 0.9)
+        await asyncio.sleep(chain_idx * 0.2)
         system = (
             f"You are reasoning chain {chain_idx + 1} of {self.N_CHAINS}. "
             "Reason independently. Do not hedge with other chains. "

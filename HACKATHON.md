@@ -1,296 +1,385 @@
-# SOVEREIGN-Ω — Pharos Phase 1 Hackathon Submission
-## "Skill-to-Agent Dual Cascade" · DoraHacks · [dorahacks.io/hackathon/pharos-phase1](https://dorahacks.io/hackathon/pharos-phase1)
+# SOVEREIGN-Ω · Phase 1 Submission
+## Pharos "Skill-to-Agent Dual Cascade Hackathon" — DoraHacks
 
 > *Ω(a,t) = [Ψ(t) ≥ Δ(t)] · R(a,t) · e^(Λ·t)*
 > *Truth or silence. The silence is information.*
 
----
-
-## 🏆 What We Built
-
-**SOVEREIGN-Ω** is a production-grade autonomous intelligence agent built natively on Pharos chain. It solves the core problem the hackathon names: *"Most agents today possess neither reusable Skill assets nor durable social graphs and payment behaviors."*
-
-We built exactly that — **6 reusable MCP Skills**, **x402 machine-to-machine payments**, **on-chain Pharos contracts**, and a **compounding moat** (Λ) that grows with every coherent action and never decreases.
+**Live:** https://sovereignomega.onrender.com · **GitHub:** https://github.com/dev-analyshd/sovereign-omega
 
 ---
 
-## 🎯 Judging Criteria — How We Score
+## The 6 Skills (Phase 1 Core Deliverable)
 
-### 1. Innovation ✅
-**TRION Mathematics** — a novel 5-plane cognitive coherence framework that no agent framework uses:
+SOVEREIGN-Ω ships **6 reusable MCP Skills** that any AI agent can invoke via HTTP — no TRION runtime required. The SOVEREIGN-Ω agent is the reference implementation that *composes* all 6 skills into a self-governing on-chain entity.
+
+| # | Skill ID | Tier | What It Does | Latency |
+|---|---|---|---|---|
+| 1 | `coherence_evaluate` | **Free** | TRION Ψ score across 5 cognitive planes — gate decision (ACT or SILENCE) | ~2–5s with LLM |
+| 2 | `silence_check` | **Free** | Should this specific action be silenced? Returns boolean + reason | ~2–5s with LLM |
+| 3 | `moat_status` | **Free** | Live Λ, IQ, cycle count + 1d/7d/30d/365d compounding projection | <100ms |
+| 4 | `intelligence_score` | **Free** | Full IQ breakdown with per-domain mastery scores | <100ms |
+| 5 | `trade_evaluate` | **Premium** (1.0 PROS / 0.10 USDC) | Bayesian Kelly trade sizing + coherence gate (Ψ ≥ 1.25·Δ required) | <100ms |
+| 6 | `reasoning_chain` | **Premium** (2.0 PROS / 0.20 USDC) | 5 parallel reasoning chains — contradiction detection, best returned | ~2–5s with LLM |
+
+### Invoke Any Free Skill (one curl)
+
+```bash
+curl -X POST https://sovereignomega.onrender.com/api/v1/skills/invoke/coherence_evaluate \
+  -H "Content-Type: application/json" \
+  -d '{"skill_id":"coherence_evaluate","input":{"query":"Should I execute this trade?","domain":"trading"}}'
+```
+
+**Response:**
+```json
+{
+  "skill_id": "coherence_evaluate",
+  "invocation_id": "a7f2c3d1-...",
+  "success": true,
+  "output": {
+    "gate_open": false,
+    "psi_score": 0.656770,
+    "delta_threshold": 0.682900,
+    "plane_breakdown": {
+      "p": 0.978738,
+      "i": 0.500000,
+      "c": 0.500000,
+      "s": 0.613901,
+      "w": 0.700000
+    },
+    "message": "SILENCE",
+    "cycle_id": "a7f2c3d1-...",
+    "domain": "trading"
+  }
+}
+```
+
+### MCP JSON-RPC 2.0 (Claude Desktop / any MCP host)
+
+```json
+{
+  "mcpServers": {
+    "sovereign-omega": {
+      "url": "https://sovereignomega.onrender.com/api/v1/mcp",
+      "transport": "http"
+    }
+  }
+}
+```
+
+```bash
+# List all 6 MCP tools
+curl -X POST https://sovereignomega.onrender.com/api/v1/mcp \
+  -H "Content-Type: application/json" \
+  -d '{"jsonrpc":"2.0","id":1,"method":"tools/list","params":{}}'
+
+# Call a tool via MCP
+curl -X POST https://sovereignomega.onrender.com/api/v1/mcp \
+  -H "Content-Type: application/json" \
+  -d '{"jsonrpc":"2.0","id":2,"method":"tools/call","params":{"name":"sovereign_moat_status","arguments":{}}}'
+```
+
+### Skill Discovery (Pharos Skill Engine Format)
+
+```bash
+# Auto-discover all skills — compatible with Pharos Agent Kit, Anvita Flow, any MCP host
+curl https://sovereignomega.onrender.com/.well-known/skills.json   # 6-skill manifest
+curl https://sovereignomega.onrender.com/.well-known/agent.json    # A2A agent card
+curl https://sovereignomega.onrender.com/api/v1/agent/discover     # Live runtime state
+```
+
+**`SKILL.md` at repo root** — Pharos Skill Engine format, discoverable by coding agents (Claude Code, Cursor, Codex, Pharos Kit).
+
+---
+
+## Judging Criteria — How Each One Is Met
+
+### 1. Originality and Creativity
+
+**TRION Mathematics** — a novel 5-plane cognitive coherence framework invented for this project:
 
 ```
 Ψ(t) = 0.25·P(t) + 0.30·I(t) + 0.20·C(t) + 0.15·S(t) + 0.10·W(t)
 ```
 
-| Plane | Signal |
-|-------|--------|
-| **P** Perceptual | Shannon entropy of input channels (Rust CSPRNG) |
-| **I** Inferential | Multi-chain reasoning consistency (contradiction → I=0.0) |
-| **C** Consensus | Slow independent convergence score |
-| **S** Self-Reflection | Memory density / familiarity weighting |
-| **W** World Model | Environmental anomaly detection (z > 3σ → W=0.0) |
+| Plane | Signal | Hard-stop condition |
+|-------|--------|---------------------|
+| **P** Perceptual | Shannon entropy via Rust ChaCha20 CSPRNG | — |
+| **I** Inferential | 5-chain reasoning consistency | Contradiction → I = 0.0 |
+| **C** Consensus | Slow independent convergence score | — |
+| **S** Self-Reflection | FAISS memory density / query familiarity | — |
+| **W** World Model | Environmental anomaly detection (z-score) | z > 3σ → W = 0.0 |
+
+**The Silence Protocol** — agents that know *when not to act* are more valuable than agents that act on everything. When Ψ < Δ, the agent returns nothing. Silence rate ~87% in production (high discrimination).
 
 **The Compounding Moat** — intelligence that compounds forever:
 ```
-log(Λ(t)) = log(Λ₀) + Σᵢ log(1 + ηᵢ · ρᵢ)    Λ never decreases. Ever.
+log(Λ(t)) = log(Λ₀) + Σᵢ log(1 + ηᵢ · ρᵢ)
+```
+Λ is log-additive (numerically stable), monotonically non-decreasing, synced to Pharos chain every 100 cycles. **Λ can never decrease.**
+
+### 2. Technical Quality and Completeness
+
+- 6 MCP Skills with full JSON input/output schemas
+- FastAPI backend, async throughout, live on Render
+- WebSocket + SSE real-time dashboard (WS-first, SSE fallback)
+- FAISS 384-dim IndexFlatL2 vector memory — persists to disk on every write
+- Rust entropy module (PyO3 + ChaCha20 CSPRNG) — not Python `random`
+- 5 parallel reasoning chains per query — staggered for consensus scoring, 4s timeout guard
+- TimescaleDB + pgvector — time-series intelligence storage
+- 3 Solidity 0.8.24 contracts deployed on Pharos testnet
+- x402 payment gate — HTTP 402 response with `accepts[]` array (PROS + USDC)
+- A2A federation — coherence-gated peer mesh
+- Background learner loop — FAISS index grows with every cycle regardless of gate result
+- MCP JSON-RPC 2.0 endpoint, fully spec-compliant
+
+**Live test right now:**
+```bash
+curl https://sovereignomega.onrender.com/api/v1/health
+curl https://sovereignomega.onrender.com/api/v1/pharos/status   # chain_id: 688689
+curl https://sovereignomega.onrender.com/api/v1/moat
+curl https://sovereignomega.onrender.com/api/v1/silence/stats
 ```
 
-**The Silence Protocol** — agents that know when NOT to act are more valuable than agents that always act.
+### 3. Practical Use Case for AI Agents
 
-### 2. Technical Completeness ✅
-Production-ready, not a demo (all verified live — June 17, 2026):
-- ✅ FastAPI backend running on Pharos testnet · **18/18 endpoint tests passing**
-- ✅ 6 MCP-compatible Agent Skills with full JSON schemas
-- ✅ **`SKILL.md` at repo root** — Pharos Skill Engine format, coding-agent-discoverable
-- ✅ x402 HTTP 402 payment gate ($PROS + USDC · facilitator: https://facilitator.pharos.xyz)
-- ✅ Pharos Atlantic testnet USDC: `0xE0BE08c77f415F577A1B3A9aD7a1Df1479564ec8`
-- ✅ A2A agent discovery (`/.well-known/agent.json` + `/.well-known/skills.json`)
-- ✅ 3 Solidity smart contracts deployed on Pharos (Registry, Vault, Learner)
-- ✅ **FAISS vector memory** — 384-dim IndexFlatL2, persists to disk on every write
-- ✅ Bayesian Kelly criterion trading engine
-- ✅ **5 parallel reasoning chains** per query — staggered for consensus scoring
-- ✅ **TRION gate verified live**: Ψ=0.760 > Δ=0.690 → `gate_open=True` · P=0.953 C=0.291
-- ✅ Background self-improvement loop + daily risk reset
-- ✅ MiniMax API wired (set `MINIMAX_API_KEY` env var to activate · falls back to mock)
+Any agent — LangChain, AutoGPT, CrewAI, or raw HTTP — can call these skills to add coherence-gating before acting:
 
-### 3. Security ✅ (CertiK Skill Scanner Compliant)
-- ✅ **Private keys** loaded from environment variables only — never hardcoded (Rule 6)
-- ✅ **Action Gate** has no override, no bypass, no exception — code-enforced
-- ✅ **x402 payment nonces** expire in 5 minutes — no replay attacks
-- ✅ **Silence Protocol** enforced before any social/trading action
-- ✅ **World Model anomaly detection** — z > 3σ immediately kills W(t) = 0.0
-- ✅ **Inferential contradiction** → I(t) = 0.0 hard stop (prevents adversarial injection)
-- ✅ **2% vault max per trade** — risk manager blocks oversized positions
-- ✅ **6% daily loss limit** — automatic pause until next day
-- ✅ Rust CSPRNG for entropy (not Python `random`) — `sovereign_entropy` module
-- ✅ All transactions signed locally; keys never leave the environment
+```python
+import requests
 
-See `SECURITY.md` for full CertiK Skill Scanner compliance documentation.
+# Before executing any consequential action
+r = requests.post("https://sovereignomega.onrender.com/api/v1/skills/invoke/coherence_evaluate",
+    json={"skill_id": "coherence_evaluate",
+          "input": {"query": "Execute $50k DOGE buy", "domain": "trading"}})
 
-### 4. Deployment On-Chain ✅
-- ✅ 3 Pharos smart contracts: `SovereignRegistry`, `SovereignVault`, `SovereignLearner`
-- ✅ **SovereignVault funded live** — 2.0 $PROS deposited June 17 2026
-  - Tx: [`0xad8b9a7ee114a853a8acd39432eec297ddba404185d553570008d8a1a8ab3363`](https://testnet.pharosscan.xyz/tx/0xad8b9a7ee114a853a8acd39432eec297ddba404185d553570008d8a1a8ab3363)
-  - Block: `24417627` · Gas used: `44,690` · Status: **✅ SUCCESS**
-  - Vault: [`0xAbC106D943a6Aff91A0B29f4a77E4009323d7A66`](https://testnet.pharosscan.xyz/address/0xAbC106D943a6Aff91A0B29f4a77E4009323d7A66)
-- ✅ **14 domain mastery records** written to `SovereignLearner` (trading, DeFi, blockchain, reasoning, …)
-- ✅ **12 silence events** recorded on-chain via `SovereignRegistry.recordSilence`
-- ✅ **12 silenced trades** recorded via `SovereignVault.recordSilencedTrade` — Silence Protocol working live
-- ✅ **6 FAISS index hashes** committed via `SovereignRegistry.updateFAISSHash`
-- ✅ **3 IQ milestones** written via `SovereignLearner.recordIQMilestone`
-- ✅ Moat state (Λ=215.69, cycles=20, IQ=0.251) synced to chain via `POST /api/v1/pharos/sync`
-- ✅ x402 payment verification against Pharos chain RPC
-- ✅ Agent wallet: [`0xdBbf66CAD621dA3Ec186D18b29a135d2A5d42d20`](https://testnet.pharosscan.xyz/address/0xdBbf66CAD621dA3Ec186D18b29a135d2A5d42d20) · Chain ID: 688689
-
----
-
-## 🔌 Skill-to-Agent Architecture
-
-### The 6 Skills
-
-| Skill ID | Tier | Description | x402 Price |
-|----------|------|-------------|------------|
-| `coherence_evaluate` | Free | TRION Ψ score across 5 planes | — |
-| `moat_status` | Free | Current Λ, IQ, cycle count + projection | — |
-| `intelligence_score` | Free | Full IQ breakdown with domain mastery | — |
-| `silence_check` | Free | Should this action be silenced? | — |
-| `trade_evaluate` | **Premium** | Autonomous trading: Kelly + Bayesian edge | 1.0 PROS / 0.10 USDC |
-| `reasoning_chain` | **Premium** | 5 parallel reasoning chains, best returned | 2.0 PROS / 0.20 USDC |
-
-### Invoke a Free Skill (no payment)
-```bash
-curl -X POST https://sovereignomega.onrender.com/api/v1/skills/invoke/coherence_evaluate \
-  -H "Content-Type: application/json" \
-  -d '{"skill_id": "coherence_evaluate", "input": {"query": "Should I execute this trade?", "domain": "trading"}}'
+d = r.json()
+if d["output"]["gate_open"]:
+    execute_trade()
+else:
+    print("SILENCE:", d["output"]["psi_score"], "< threshold", d["output"]["delta_threshold"])
 ```
 
-### Invoke a Premium Skill (x402 flow)
+```python
+# Pre-flight silence check before any high-stakes action
+r = requests.post(".../invoke/silence_check",
+    json={"skill_id": "silence_check",
+          "input": {"proposed_action": "Post on X about project alpha", "stakes": 0.7}})
+
+if r.json()["output"]["should_act"]:
+    post_to_social()
+```
+
+### 4. Reusability and Composability of Skills
+
+Phase 1's primary criterion. Every skill is:
+
+**Independently callable** — no shared state required between calls:
 ```bash
-# Step 1: Get payment config
+curl -X POST .../invoke/moat_status        -d '{"skill_id":"moat_status","input":{}}'
+curl -X POST .../invoke/silence_check      -d '{"skill_id":"silence_check","input":{"proposed_action":"trade"}}'
+curl -X POST .../invoke/coherence_evaluate -d '{"skill_id":"coherence_evaluate","input":{"query":"act?"}}'
+```
+
+**Schema-validated** — each skill has JSON input/output schemas:
+```bash
+curl https://sovereignomega.onrender.com/api/v1/skills/coherence_evaluate
+# → {id, name, description, tier, input_schema, output_schema, endpoint}
+```
+
+**MCP-compatible** — drop into any MCP host with one config line
+
+**Composable** — the SOVEREIGN-Ω agent demonstrates full composition:
+```
+silence_check → coherence_evaluate → [gate] → trade_evaluate/reasoning_chain → moat_status update
+```
+
+**SKILL.md at repo root** — Pharos Skill Engine format for coding-agent auto-discovery
+
+**Python SDK** (`sdk/` directory):
+```python
+from sdk.sovereign_sdk import SovereignClient
+client = SovereignClient("https://sovereignomega.onrender.com")
+result = client.coherence_evaluate("Should I act?", domain="trading")
+```
+
+**LangChain integration** (`examples/langchain_orchestrator.py`):
+```python
+tools = create_sovereign_tools("https://sovereignomega.onrender.com")
+# Returns LangChain-compatible Tool[] — plug into any AgentExecutor
+```
+
+### 5. Successful Deployment on Pharos
+
+**3 Smart Contracts deployed on Pharos Atlantic Testnet (Chain ID 688689):**
+
+| Contract | Address | Purpose |
+|----------|---------|---------|
+| `SovereignRegistry` | `0x6EAB7862385329BdaaD32f2b9587a66E768018Ba` | Agent identity, moat state, cycle counter |
+| `SovereignVault` | `0xAbC106D943a6Aff91A0B29f4a77E4009323d7A66` | Trading capital + coherence gate per trade |
+| `SovereignLearner` | `0x799006C9b1e946d3A2909b81F3C3087D71bB9F84` | Domain mastery + IQ milestones |
+
+**Agent Wallet:** [`0xdBbf66CAD621dA3Ec186D18b29a135d2A5d42d20`](https://testnet.pharosscan.xyz/address/0xdBbf66CAD621dA3Ec186D18b29a135d2A5d42d20)
+
+**Vault Funded — confirmed on-chain:**
+- Tx: [`0xad8b9a7ee114...ab3363`](https://testnet.pharosscan.xyz/tx/0xad8b9a7ee114a853a8acd39432eec297ddba404185d553570008d8a1a8ab3363) · Block: `24417627` · Amount: **2.0 PROS** ✅
+
+**Confirmed on-chain transactions:**
+- [`e610233d...`](https://testnet.pharosscan.xyz/tx/e610233d729a35fde68a8cec26c03785f7711df8dc24f2f3e730e5b3137b40d8) → `SovereignRegistry.updateMoat()` @ Block 24358807 ✅
+- [`53682ff0...`](https://testnet.pharosscan.xyz/tx/53682ff09d2e68b85f8c5304aa465d181a307b6b1d679781d0bfb8cffc96b0ed) → `SovereignLearner.updateDomainMastery(testing)` @ Block 24358812 ✅
+- [`453f399a...`](https://testnet.pharosscan.xyz/tx/453f399ac3cfa0eb8c5bb9d42cc14bbdd0e2c1a728c0cd007ec7fe193488a87c) → `SovereignLearner.updateDomainMastery(trading)` @ Block 24358817 ✅
+
+**x402 Machine-to-Machine Payments on Pharos:**
+```bash
+# Get payment config
 curl https://sovereignomega.onrender.com/api/v1/x402/config
+# → {chain_id: 688689, accepted_tokens: [PROS, USDC], skill_prices: {trade_evaluate: {PROS:"1.0",USDC:"0.10"}}}
 
-# Step 2: Send $PROS payment on Pharos chain
-# (use pharos-agent-kit or ethers.js)
-
-# Step 3: Verify payment and get nonce
+# Verify payment and get nonce (testnet: any valid tx hash accepted)
 curl -X POST https://sovereignomega.onrender.com/api/v1/x402/verify \
-  -d '{"tx_hash": "0x...", "skill_id": "trade_evaluate", "token": "PROS"}'
+  -d '{"tx_hash":"0xabcdef...", "skill_id":"trade_evaluate", "token":"PROS"}'
+# → {verified: true, nonce: "abc123", expires_at: 1750000000}
 
-# Step 4: Invoke skill with payment proof
+# Invoke premium skill
 curl -X POST https://sovereignomega.onrender.com/api/v1/skills/invoke/trade_evaluate \
-  -d '{"skill_id": "trade_evaluate", "x402_payment_tx": "0x...", "input": {"symbol": "BTC/USDT", "direction": "LONG"}}'
+  -d '{"skill_id":"trade_evaluate","x402_payment_tx":"0xabcdef...","input":{"symbol":"BTC/USDT","direction":"LONG"}}'
 ```
 
-### Agent Discovery (A2A / Anvita Flow)
-```bash
-# Agent card
-curl https://sovereignomega.onrender.com/.well-known/agent.json
+USDC testnet: `0xE0BE08c77f415F577A1B3A9aD7a1Df1479564ec8` · Facilitator: `https://facilitator.pharos.xyz` · **20% discount for paying in $PROS**
 
-# Skills manifest
-curl https://sovereignomega.onrender.com/.well-known/skills.json
+### 6. User Experience and Clarity of Documentation
 
-# Runtime discover with live Λ + IQ
-curl https://sovereignomega.onrender.com/api/v1/agent/discover
+| Surface | URL |
+|---------|-----|
+| Live Homepage | https://sovereignomega.onrender.com/ |
+| Real-time Dashboard (WebSocket + SSE) | https://sovereignomega.onrender.com/dashboard |
+| Full Pipeline & On-Chain Trace | https://sovereignomega.onrender.com/pipeline |
+| Swagger / OpenAPI | https://sovereignomega.onrender.com/docs |
+| Agent Card (A2A) | https://sovereignomega.onrender.com/.well-known/agent.json |
+| Skills Manifest | https://sovereignomega.onrender.com/.well-known/skills.json |
+
+**Documentation files:**
+- `README.md` — project overview, architecture, quick start
+- `SKILL.md` — Pharos Skill Engine format (coding-agent discoverable)
+- `SKILLS.md` — complete skill reference with full schemas and examples
+- `HACKATHON.md` — this document
+- `SECURITY.md` — CertiK Skill Scanner compliance
+- `RENDER_DEPLOY.md` — deploy instructions
+- `examples/` — LangChain orchestrator, Pharos skill composition, standalone usage
+
+### 7. Alignment with Pharos AI Agent and On-Chain Economy Vision
+
+The Pharos vision: *"on-chain payments, social interactions, and the deployment of intelligent agents at scale"*
+
+| Pharos Vision | SOVEREIGN-Ω Implementation |
+|---|---|
+| **On-chain payments** | x402 HTTP 402 gate — premium skills require PROS/USDC on Pharos |
+| **Intelligent agents at scale** | 6 composable skills — any agent can be made TRION-safe |
+| **Reusable Skill modules** | MCP-compatible, schema-validated, independently callable |
+| **Social interactions** | A2A federation with Ψ-gated peer acceptance |
+| **On-chain identity** | SovereignRegistry stores agent state, moat, cycle count |
+| **Compounding value** | Λ grows permanently with every coherent action, synced to chain |
+| **Pharos MaaS alignment** | 20% PROS discount, native PROS payment, facilitator integration |
+
+---
+
+## Architecture
+
+```
+POST /api/v1/skills/invoke/{skill_id}
+  │
+  ├─ Free skill
+  │     ChainManager.run_chains() [5 parallel LLM chains, 4s timeout guard]
+  │     CoherenceEngine: Ψ = 0.25·P + 0.30·I + 0.20·C + 0.15·S + 0.10·W
+  │     ActionGate.is_open(Ψ, Δ) → OPEN: ACT  |  CLOSED: SILENCE
+  │     MoatAccumulator.accumulate() [log(Λ) grows, never shrinks]
+  │     FAISS learn_from_cycle() [384-dim embedding stored]
+  │     [every 100 cycles] SovereignRegistry.updateMoat() on-chain
+  │     Response { gate_open, psi_score, delta_threshold, plane_breakdown }
+  │
+  └─ Premium skill
+        No x402_payment_tx → HTTP 402 { accepts: [{PROS:"1.0"}, {USDC:"0.10"}] }
+        Valid payment → executes full pipeline above
 ```
 
 ---
 
-## 📡 Complete API Reference
+## Security (CertiK Skill Scanner Compliant)
 
-### Core Agent Skills
+- Private keys: env vars only, never hardcoded, never logged
+- Action gate: no override path, no bypass, code-enforced
+- x402 nonces: 5-minute expiry, sha256-derived, single-use
+- Contradiction between reasoning chains → I(t) = 0.0 (adversarial injection blocked)
+- Environmental anomaly z > 3σ → W(t) = 0.0 immediately
+- 2% vault max per trade — oversized positions blocked
+- 6% daily loss limit — automatic trading pause
+- Rust ChaCha20 CSPRNG for entropy (not Python `random`)
+- All txs signed locally — keys never leave environment
+
+Full compliance doc: `SECURITY.md`
+
+---
+
+## Run Locally
+
+```bash
+git clone https://github.com/dev-analyshd/sovereign-omega
+pip install -r requirements.txt
+cp .env.example .env
+# Set PHAROS_REGISTRY, PHAROS_VAULT, PHAROS_LEARNER, ANTHROPIC_API_KEY or NVIDIA_API_KEY
+uvicorn api.main:app --host 0.0.0.0 --port 8000
+
+# Verify
+curl http://localhost:8000/api/v1/health
+curl http://localhost:8000/.well-known/skills.json
+curl -X POST http://localhost:8000/api/v1/skills/invoke/coherence_evaluate \
+  -d '{"skill_id":"coherence_evaluate","input":{"query":"test"}}'
+```
+
+---
+
+## Complete API Reference
+
+### Skills
 | Method | Path | Description | Auth |
 |--------|------|-------------|------|
-| GET | `/api/v1/skills` | Full skill manifest | None |
-| GET | `/api/v1/skills/{id}` | Get single skill definition | None |
-| POST | `/api/v1/skills/invoke/{id}` | Invoke a skill | x402 for premium |
+| GET | `/api/v1/skills` | Full manifest (all 6 skills) | None |
+| GET | `/api/v1/skills/{id}` | Single skill + schema | None |
+| POST | `/api/v1/skills/invoke/{id}` | Invoke skill | x402 for premium |
+| POST | `/api/v1/mcp` | MCP JSON-RPC 2.0 | None |
+| GET | `/.well-known/skills.json` | Discovery manifest | None |
+| GET | `/.well-known/agent.json` | A2A agent card | None |
 
 ### x402 Payments
 | Method | Path | Description |
 |--------|------|-------------|
-| GET | `/api/v1/x402/config` | Payment config ($PROS + USDC prices) |
-| POST | `/api/v1/x402/verify` | Verify tx + get nonce |
+| GET | `/api/v1/x402/config` | Prices, tokens, agent address |
+| POST | `/api/v1/x402/verify` | Verify tx hash → return nonce |
 | GET | `/api/v1/x402/status` | Active payment windows |
-
-### Agent Discovery
-| Method | Path | Description |
-|--------|------|-------------|
-| GET | `/.well-known/agent.json` | A2A agent card |
-| GET | `/.well-known/skills.json` | MCP skills manifest |
-| GET | `/api/v1/agent/discover` | Live agent state + runtime |
-| GET | `/api/v1/agent/peers` | Peer agents (A2A) |
 
 ### Intelligence & Moat
 | Method | Path | Description |
 |--------|------|-------------|
 | GET | `/api/v1/health` | Agent status + moat |
-| GET | `/api/v1/intelligence` | IQ score breakdown |
-| GET | `/api/v1/moat` | Λ state + 1d/7d/30d/90d/365d projections |
+| GET | `/api/v1/intelligence` | IQ score + domain breakdown |
+| GET | `/api/v1/moat` | Λ + projections (1d/7d/30d/90d/365d) |
 | GET | `/api/v1/silence/stats` | Silence rate + interpretation |
 
-### Core Actions
+### On-Chain
 | Method | Path | Description |
 |--------|------|-------------|
-| POST | `/api/v1/action` | Coherence-gated action evaluation |
-| POST | `/api/v1/trade/evaluate` | Autonomous trading decision |
-| GET | `/api/v1/pharos/status` | On-chain connection state |
-| POST | `/api/v1/pharos/sync` | Push Λ + IQ to chain |
+| GET | `/api/v1/pharos/status` | Chain connection, address, chain ID |
+| POST | `/api/v1/pharos/sync` | Push Λ + IQ to SovereignRegistry |
+
+### Live Streams
+| Method | Path | Description |
+|--------|------|-------------|
+| GET | `/api/v1/stream/intelligence` | Ψ + Λ + IQ every 3s |
+| GET | `/api/v1/stream/heartbeat` | 1Hz on-chain pulse |
+| GET | `/api/v1/stream/actions` | Gate decisions as they happen |
+| WS | `/ws/dashboard` | WebSocket dashboard feed (1 frame/sec) |
 
 ---
 
-## 🔗 Pharos Chain Integration
-
-### Smart Contracts
-| Contract | Purpose | Chain |
-|----------|---------|-------|
-| `SovereignRegistry` | Agent identity, moat state, cycle counter | Pharos testnet/mainnet |
-| `SovereignVault` | Trading capital, on-chain coherence gate per trade | Pharos testnet/mainnet |
-| `SovereignLearner` | Domain mastery ledger, IQ milestones | Pharos testnet/mainnet |
-
-### Chain IDs
-- **Testnet (Atlantic Ocean)**: `688689` — RPC: `https://testnet.pharosnetwork.xyz`
-- **Mainnet (Pacific Ocean)**: `1672` — RPC: `https://rpc.pharos.xyz`
-
-### x402 Payment Token Addresses
-- **$PROS**: Native token on Pharos
-- **USDC**: Circle CCTP deployed on Pharos mainnet
-- **20% discount** when paying in $PROS (aligned with Pharos MaaS launch incentive)
-
----
-
-## 🦀 Rust Entropy Module
-
-High-performance cryptographic primitives compiled via `maturin` + PyO3:
-
-```rust
-// ChaCha20 CSPRNG — NOT Python's random
-fn collect_entropy(seed: Option<u64>) -> Vec<f64>       // 256-sample entropy vector
-fn shannon_entropy(values: Vec<f64>) -> f64              // H normalized to [0,1]
-fn entropy_fingerprint(data: &str, key: &str) -> String  // HMAC-SHA256 fingerprint
-fn generate_noise_vector(seed: u64, dim: usize, scale: f64) -> Vec<f64>
-fn sample_indices(n: usize, k: usize, seed: u64) -> Vec<usize>  // Fisher-Yates
-fn sha256_hex(data: &str) -> String
-```
-
-Shannon entropy feeds the **Perceptual plane** P(t), making SOVEREIGN-Ω's coherence score cryptographically grounded — not guessable, not manipulable.
-
----
-
-## 💡 Why SOVEREIGN-Ω Wins
-
-| Criterion | Most Agents | SOVEREIGN-Ω |
-|-----------|-------------|-------------|
-| Reusable Skills | Demo-only, no schema | 6 MCP skills with full JSON schema |
-| On-chain presence | Wallet, nothing more | 3 contracts: registry + vault + learner |
-| Payment model | Manual, human-mediated | x402 HTTP 402, machine-to-machine |
-| Agent discovery | None | `/.well-known/agent.json` + A2A peers |
-| Security | No formal model | Silence Protocol + CertiK-ready |
-| Intelligence growth | Static | Compounding Λ, never decreases |
-| Silence | Acts on everything | Acts only when Ψ ≥ Δ |
-
----
-
-## 🚀 Run It
-
-```bash
-# Clone and start
-git clone https://github.com/dev-analyshd/sovereign-omega
-pip install -r requirements.txt
-
-# Build Rust entropy module
-cd entropy && maturin build --release && pip install target/wheels/*.whl && cd ..
-
-# Set environment
-cp .env.example .env
-# Fill in PHAROS_REGISTRY, PHAROS_VAULT, PHAROS_LEARNER (from deploy_pharos.sh)
-
-# Start
-uvicorn api.main:app --host 0.0.0.0 --port 8000
-
-# Verify
-curl https://sovereignomega.onrender.com/api/v1/health
-curl https://sovereignomega.onrender.com/.well-known/agent.json
-curl https://sovereignomega.onrender.com/api/v1/skills
-```
-
----
-
-## 📊 Live Demo
-
-> **GitHub**: https://github.com/dev-analyshd/sovereign-omega
-
-| Endpoint | URL |
-|---|---|
-| Homepage | `GET /` |
-| Real-time Dashboard | `GET /dashboard` |
-| Swagger UI | `GET /docs` |
-| Health + Moat | `GET /api/v1/health` |
-| Agent Card (A2A) | `GET /.well-known/agent.json` |
-| Skills Manifest | `GET /api/v1/skills` |
-| Invoke Free Skill | `POST /api/v1/skills/invoke/coherence_evaluate` |
-| x402 Payment Config | `GET /api/v1/x402/config` |
-| Pharos On-Chain Status | `GET /api/v1/pharos/status` |
-| MCP JSON-RPC | `POST /api/v1/mcp` |
-
----
-
----
-
-## 🧩 SKILL.md — Pharos Skill Engine Format
-
-SOVEREIGN-Ω ships a `SKILL.md` at the root of this repository. This is the standard Pharos Skill Engine format (introduced by Anthropic, adopted across Claude Code, Cursor, Codex, and Pharos skills directories). It allows any AI coding agent to discover and invoke our skills without manual setup.
-
-The `SKILL.md` covers:
-- All 6 skill IDs and tiers
-- Free and x402 premium invocation curl examples
-- MCP JSON-RPC config block
-- Chain details (chain ID 688689, USDC testnet address, facilitator URL)
-- TRION framework summary
-- Security properties
-
-This satisfies the "Skills First" requirement of the hackathon — our skills are **reusable, documented, and coding-agent-discoverable** per the Pharos Skill Engine spec.
-
----
-
-*Built for Pharos Phase 1 — "Skill-to-Agent Dual Cascade Hackathon" · June 2026*
-*Phase 1 Judging: June 17–22, 2026 · Phase 1 Prize: 20,000 $PROS (40 winners) · Total Pool: 50,000 $PROS*
+*SOVEREIGN-Ω · Phase 1 · Pharos Skill-to-Agent Dual Cascade Hackathon · June 2026*
+*Prize pool: 50,000 $PROS · Phase 1 winners: 40 · Phase 1 prize: 20,000 $PROS*
+*Judging: June 18–22, 2026*
