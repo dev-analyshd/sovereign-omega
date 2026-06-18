@@ -1,6 +1,35 @@
-# SOVEREIGN-Ω
+# SOVEREIGN-Ω · 6 MCP Skills for Verifiable Agent Cognition
 
 > *Truth or silence. The silence is information.*
+
+**Phase 1 Submission — Pharos "Skill-to-Agent Dual Cascade Hackathon"**
+
+SOVEREIGN-Ω provides **6 reusable MCP Skills** that any AI agent can call to add mathematically-verified cognition to its decision-making — coherence scoring, silence gating, trade sizing, parallel reasoning, and more. All skills are independently callable over HTTP or MCP JSON-RPC 2.0, x402-monetized on Pharos, and backed by on-chain contracts.
+
+**The included Agent is the reference implementation** showing how all 6 skills compose into a self-governing autonomous entity with a compounding intelligence moat (Λ).
+
+```bash
+# Any agent can call a free skill — no SDK, no runtime
+curl -X POST https://<agent-host>/api/v1/skills/invoke/coherence_evaluate \
+  -H "Content-Type: application/json" \
+  -d '{"skill_id":"coherence_evaluate","input":{"query":"Should I act now?","domain":"trading"}}'
+# → {"gate_open": true, "psi_score": 0.762, "plane_breakdown": {...}}
+```
+
+| Skill | Tier | Purpose |
+|---|---|---|
+| `coherence_evaluate` | 🆓 Free | TRION Ψ-score across 5 cognitive planes |
+| `silence_check` | 🆓 Free | Should this action be silenced? |
+| `moat_status` | 🆓 Free | Live Λ reputation score + projection |
+| `intelligence_score` | 🆓 Free | IQ breakdown with domain mastery |
+| `trade_evaluate` | 💰 1 PROS | Bayesian Kelly trade sizing + risk gate |
+| `reasoning_chain` | 💰 2 PROS | 5 parallel reasoning chains, best returned |
+
+→ **Full skill specs:** [`SKILLS.md`](./SKILLS.md) · **Examples:** [`examples/`](./examples/) · **Schemas:** [`skills/`](./skills/)
+
+---
+
+## Under the Hood: TRION Mathematics
 
 An autonomous intelligence system governed by TRION mathematics. It acts only when coherent, learns from every cycle, and accumulates a permanent compounding moat on Pharos chain.
 

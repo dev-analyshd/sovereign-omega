@@ -1,0 +1,70 @@
+{
+  "schema_version": "1.0",
+  "skill_id": "trade_evaluate",
+  "name": "Trade Evaluate",
+  "description": "Autonomous trading decision using Bayesian Kelly criterion, risk management, and TRION coherence gate. Returns optimal position sizing, win probability, and expected value. The trade only fires if Ψ ≥ Δ_trade (25% higher threshold than general gate).",
+  "version": "2.0.0",
+  "author": "SOVEREIGN-Ω",
+  "chain": "Pharos",
+  "chain_id_testnet": 688689,
+  "tier": "premium",
+  "x402_required": true,
+  "x402_price": {
+    "PROS": "1.0",
+    "USDC": "0.10",
+    "PROS_discounted": "0.8",
+    "discount_note": "20% discount when paying in native $PROS"
+  },
+  "x402_facilitator": "https://facilitator.pharos.xyz",
+  "x402_recipient": "0xdBbf66CAD621dA3Ec186D18b29a135d2A5d42d20",
+  "x402_usdc_address": "0xE0BE08c77f415F577A1B3A9aD7a1Df1479564ec8",
+  "x402_payment_flow": "/api/v1/x402/config → send on Pharos → /api/v1/x402/verify → invoke",
+  "endpoint": "/api/v1/skills/invoke/trade_evaluate",
+  "mcp_tool_name": "sovereign_trade_evaluate",
+  "input_schema": {
+    "type": "object",
+    "required": ["symbol", "direction"],
+    "properties": {
+      "symbol": {"type": "string", "default": "BTC/USDT"},
+      "direction": {"type": "string", "enum": ["LONG", "SHORT"]},
+      "strategy": {
+        "type": "string",
+        "enum": ["momentum", "mean_reversion", "breakout"],
+        "default": "momentum"
+      },
+      "portfolio_pct": {
+        "type": "number",
+        "minimum": 0,
+        "maximum": 1,
+        "description": "Fraction of portfolio to evaluate"
+      },
+      "market_data": {
+        "type": "object",
+        "properties": {
+          "price": {"type": "number"},
+          "volume_24h": {"type": "number"}
+        }
+      }
+    }
+  },
+  "output_schema": {
+    "type": "object",
+    "properties": {
+      "action": {"type": "string", "enum": ["ACT", "SILENCE", "NO_EDGE", "RISK_BLOCKED"]},
+      "kelly_fraction": {"type": "number", "minimum": 0, "maximum": 0.02},
+      "position_size_usd": {"type": "number"},
+      "win_probability": {"type": "number", "minimum": 0, "maximum": 1},
+      "expected_value": {"type": "number"},
+      "risk_level": {"type": "string", "enum": ["LOW", "MEDIUM", "HIGH", "EXTREME"]},
+      "gate_open": {"type": "boolean"},
+      "psi_score": {"type": "number"},
+      "reasoning": {"type": "string"}
+    }
+  },
+  "security": {
+    "max_position_pct": "2% of vault",
+    "daily_loss_limit": "6%",
+    "gate_threshold_multiplier": 1.25
+  },
+  "tags": ["trading", "kelly", "bayesian", "premium", "x402", "pharos"]
+}

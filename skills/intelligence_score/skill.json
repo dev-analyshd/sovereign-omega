@@ -1,0 +1,42 @@
+{
+  "schema_version": "1.0",
+  "skill_id": "intelligence_score",
+  "name": "Intelligence Score",
+  "description": "Get the full IQ breakdown including domain mastery per topic, moat trajectory, and 30/90/365-day projections. Useful for agents selecting which sub-agents or skills to trust.",
+  "version": "2.0.0",
+  "author": "SOVEREIGN-Ω",
+  "chain": "Pharos",
+  "chain_id_testnet": 688689,
+  "tier": "free",
+  "x402_required": false,
+  "endpoint": "/api/v1/skills/invoke/intelligence_score",
+  "mcp_tool_name": "sovereign_intelligence_score",
+  "input_schema": {
+    "type": "object",
+    "properties": {
+      "include_projection": {
+        "type": "boolean",
+        "default": true,
+        "description": "Include 30/90/365-day moat projections"
+      }
+    }
+  },
+  "output_schema": {
+    "type": "object",
+    "properties": {
+      "iq": {"type": "number"},
+      "lambda": {"type": "number"},
+      "cycles": {"type": "integer"},
+      "domain_breakdown": {"type": "object"},
+      "projection": {
+        "type": "object",
+        "properties": {
+          "30d": {"type": "number"},
+          "90d": {"type": "number"},
+          "365d": {"type": "number"}
+        }
+      }
+    }
+  },
+  "tags": ["intelligence", "iq", "mastery", "free", "pharos"]
+}

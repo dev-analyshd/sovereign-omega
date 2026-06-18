@@ -1,0 +1,60 @@
+{
+  "schema_version": "1.0",
+  "skill_id": "coherence_evaluate",
+  "name": "Coherence Evaluate",
+  "description": "Run TRION mathematics across five cognitive planes (Perceptual, Inferential, Consensus, Self-Reflection, World Model). Returns Ψ coherence score, dynamic threshold Δ, and a gate decision. Any agent can use this to verify cognitive quality before acting.",
+  "version": "2.0.0",
+  "author": "SOVEREIGN-Ω",
+  "chain": "Pharos",
+  "chain_id_testnet": 688689,
+  "tier": "free",
+  "x402_required": false,
+  "endpoint": "/api/v1/skills/invoke/coherence_evaluate",
+  "mcp_tool_name": "sovereign_coherence_evaluate",
+  "input_schema": {
+    "type": "object",
+    "required": ["query"],
+    "properties": {
+      "query": {
+        "type": "string",
+        "description": "The action or question to evaluate for coherence"
+      },
+      "domain": {
+        "type": "string",
+        "enum": ["trading", "social", "general"],
+        "default": "general"
+      },
+      "context": {
+        "type": "object",
+        "description": "Optional environmental context",
+        "properties": {
+          "volatility": {"type": "number", "minimum": 0, "maximum": 1},
+          "novelty": {"type": "number", "minimum": 0, "maximum": 1},
+          "input_channels": {"type": "object"},
+          "environmental_signals": {"type": "object"}
+        }
+      }
+    }
+  },
+  "output_schema": {
+    "type": "object",
+    "properties": {
+      "gate_open": {"type": "boolean", "description": "true = ACT, false = SILENCE"},
+      "psi_score": {"type": "number", "minimum": 0, "maximum": 1},
+      "delta_threshold": {"type": "number", "minimum": 0, "maximum": 1},
+      "plane_breakdown": {
+        "type": "object",
+        "properties": {
+          "p": {"type": "number", "description": "Perceptual — Shannon entropy"},
+          "i": {"type": "number", "description": "Inferential — chain consistency"},
+          "c": {"type": "number", "description": "Consensus — convergence score"},
+          "s": {"type": "number", "description": "Self-Reflection — memory density"},
+          "w": {"type": "number", "description": "World Model — anomaly detection"}
+        }
+      },
+      "message": {"type": "string", "enum": ["ACTION", "SILENCE"]},
+      "cycle_id": {"type": "string", "format": "uuid"}
+    }
+  },
+  "tags": ["cognition", "coherence", "trion", "free", "pharos"]
+}

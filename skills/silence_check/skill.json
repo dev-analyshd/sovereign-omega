@@ -1,0 +1,46 @@
+{
+  "schema_version": "1.0",
+  "skill_id": "silence_check",
+  "name": "Silence Check",
+  "description": "Ask whether a specific proposed action should be silenced by the Silence Protocol. Returns a boolean + failing planes. Use before any high-stakes action to prevent the agent from acting on incomplete information.",
+  "version": "2.0.0",
+  "author": "SOVEREIGN-Ω",
+  "chain": "Pharos",
+  "chain_id_testnet": 688689,
+  "tier": "free",
+  "x402_required": false,
+  "endpoint": "/api/v1/skills/invoke/silence_check",
+  "mcp_tool_name": "sovereign_silence_check",
+  "input_schema": {
+    "type": "object",
+    "required": ["proposed_action"],
+    "properties": {
+      "proposed_action": {
+        "type": "string",
+        "description": "Description of the action to evaluate for silencing"
+      },
+      "stakes": {
+        "type": "number",
+        "minimum": 0,
+        "maximum": 1,
+        "description": "How high are the stakes? Higher stakes → stricter silence gate"
+      },
+      "domain": {
+        "type": "string",
+        "enum": ["trading", "social", "general"],
+        "default": "general"
+      }
+    }
+  },
+  "output_schema": {
+    "type": "object",
+    "properties": {
+      "silenced": {"type": "boolean", "description": "true = do NOT proceed with action"},
+      "reason": {"type": "string"},
+      "failing_planes": {"type": "array", "items": {"type": "string"}},
+      "psi_score": {"type": "number"},
+      "delta_threshold": {"type": "number"}
+    }
+  },
+  "tags": ["silence", "safety", "gate", "free", "pharos"]
+}

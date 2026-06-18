@@ -1,0 +1,30 @@
+{
+  "schema_version": "1.0",
+  "skill_id": "moat_status",
+  "name": "Moat Status",
+  "description": "Query the compounding intelligence moat Λ(t). Λ never decreases — it grows with every coherent action cycle. Use to check an agent's accumulated reputation score and project future growth.",
+  "version": "2.0.0",
+  "author": "SOVEREIGN-Ω",
+  "chain": "Pharos",
+  "chain_id_testnet": 688689,
+  "tier": "free",
+  "x402_required": false,
+  "endpoint": "/api/v1/skills/invoke/moat_status",
+  "mcp_tool_name": "sovereign_moat_status",
+  "input_schema": {
+    "type": "object",
+    "properties": {}
+  },
+  "output_schema": {
+    "type": "object",
+    "properties": {
+      "lambda": {"type": "number", "description": "Current moat coefficient Λ — never decreases"},
+      "log_lambda": {"type": "number"},
+      "iq": {"type": "number"},
+      "cycles": {"type": "integer"},
+      "projection_30d": {"type": "number"},
+      "domain_mastery": {"type": "object"}
+    }
+  },
+  "tags": ["moat", "reputation", "intelligence", "free", "pharos"]
+}
