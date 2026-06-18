@@ -4,7 +4,7 @@
 
 SOVEREIGN-Ω ships **6 reusable MCP Skills** that any AI agent can call over HTTP or MCP JSON-RPC 2.0. No TRION runtime required — just HTTP. The included SOVEREIGN-Ω Agent is the reference implementation showing how all 6 skills compose into a self-governing autonomous entity.
 
-**Live endpoint:** `https://3b0fe305-de58-4f8c-9b1f-6ac365d51561-00-2cx3283bumy11.kirk.replit.dev`
+**Live endpoint:** `https://sovereignomega.onrender.com`
 
 ---
 
@@ -28,7 +28,7 @@ Any agent — LangChain, AutoGPT, CrewAI, raw HTTP — can call these skills wit
 ```python
 import requests
 
-BASE = "https://3b0fe305-de58-4f8c-9b1f-6ac365d51561-00-2cx3283bumy11.kirk.replit.dev"
+BASE = "https://sovereignomega.onrender.com"
 
 # Free skill — no auth, no setup
 r = requests.post(f"{BASE}/api/v1/skills/invoke/coherence_evaluate", json={
@@ -44,7 +44,7 @@ print(r.json())
 {
   "mcpServers": {
     "sovereign-omega": {
-      "url": "https://3b0fe305-de58-4f8c-9b1f-6ac365d51561-00-2cx3283bumy11.kirk.replit.dev/api/v1/mcp",
+      "url": "https://sovereignomega.onrender.com/api/v1/mcp",
       "transport": "http"
     }
   }
@@ -111,7 +111,7 @@ const tools = createSovereignTools({ agentUrl: BASE });
 
 **Live test:**
 ```bash
-curl -X POST https://3b0fe305-de58-4f8c-9b1f-6ac365d51561-00-2cx3283bumy11.kirk.replit.dev/api/v1/skills/invoke/coherence_evaluate \
+curl -X POST https://sovereignomega.onrender.com/api/v1/skills/invoke/coherence_evaluate \
   -H "Content-Type: application/json" \
   -d '{"skill_id":"coherence_evaluate","input":{"query":"Buy BTC now?","domain":"trading"}}'
 ```
@@ -151,7 +151,7 @@ curl -X POST https://3b0fe305-de58-4f8c-9b1f-6ac365d51561-00-2cx3283bumy11.kirk.
 
 **Live test:**
 ```bash
-curl -X POST https://3b0fe305-de58-4f8c-9b1f-6ac365d51561-00-2cx3283bumy11.kirk.replit.dev/api/v1/skills/invoke/silence_check \
+curl -X POST https://sovereignomega.onrender.com/api/v1/skills/invoke/silence_check \
   -H "Content-Type: application/json" \
   -d '{"skill_id":"silence_check","input":{"proposed_action":"Send 100% of portfolio to a new token","stakes":1.0}}'
 ```
@@ -192,7 +192,7 @@ curl -X POST https://3b0fe305-de58-4f8c-9b1f-6ac365d51561-00-2cx3283bumy11.kirk.
 
 **Live test:**
 ```bash
-curl -X POST https://3b0fe305-de58-4f8c-9b1f-6ac365d51561-00-2cx3283bumy11.kirk.replit.dev/api/v1/skills/invoke/moat_status \
+curl -X POST https://sovereignomega.onrender.com/api/v1/skills/invoke/moat_status \
   -H "Content-Type: application/json" \
   -d '{"skill_id":"moat_status","input":{}}'
 ```
@@ -248,7 +248,7 @@ curl -X POST https://3b0fe305-de58-4f8c-9b1f-6ac365d51561-00-2cx3283bumy11.kirk.
 **x402 Payment flow:**
 ```bash
 # Step 1 — Get payment config
-curl https://3b0fe305-de58-4f8c-9b1f-6ac365d51561-00-2cx3283bumy11.kirk.replit.dev/api/v1/x402/config
+curl https://sovereignomega.onrender.com/api/v1/x402/config
 
 # Step 2 — Send 1.0 PROS on Pharos (chain ID 688689) to agent wallet:
 #   0xdBbf66CAD621dA3Ec186D18b29a135d2A5d42d20
@@ -339,7 +339,7 @@ curl -X POST .../api/v1/skills/invoke/trade_evaluate \
 ```python
 import requests
 
-BASE = "https://3b0fe305-de58-4f8c-9b1f-6ac365d51561-00-2cx3283bumy11.kirk.replit.dev"
+BASE = "https://sovereignomega.onrender.com"
 
 # Step 1: Check if the environment is coherent enough to reason
 coherence = requests.post(f"{BASE}/api/v1/skills/invoke/coherence_evaluate", json={

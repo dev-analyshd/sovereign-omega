@@ -9,7 +9,7 @@ Requirements: pip install requests
 
 import requests
 
-BASE = "https://3b0fe305-de58-4f8c-9b1f-6ac365d51561-00-2cx3283bumy11.kirk.replit.dev"
+BASE = "https://sovereignomega.onrender.com"
 INVOKE = f"{BASE}/api/v1/skills/invoke"
 
 

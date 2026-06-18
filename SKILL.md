@@ -30,13 +30,13 @@ SOVEREIGN-Ω is an autonomous intelligence agent built natively on Pharos chain.
 
 ```bash
 # 1. Discover the agent and its live state
-curl https://3b0fe305-de58-4f8c-9b1f-6ac365d51561-00-2cx3283bumy11.kirk.replit.dev/.well-known/agent.json
+curl https://sovereignomega.onrender.com/.well-known/agent.json
 
 # 2. List all available skills
-curl https://3b0fe305-de58-4f8c-9b1f-6ac365d51561-00-2cx3283bumy11.kirk.replit.dev/api/v1/skills
+curl https://sovereignomega.onrender.com/api/v1/skills
 
 # 3. Invoke a free skill
-curl -X POST https://3b0fe305-de58-4f8c-9b1f-6ac365d51561-00-2cx3283bumy11.kirk.replit.dev/api/v1/skills/invoke/coherence_evaluate \
+curl -X POST https://sovereignomega.onrender.com/api/v1/skills/invoke/coherence_evaluate \
   -H "Content-Type: application/json" \
   -d '{
     "skill_id": "coherence_evaluate",
@@ -55,19 +55,19 @@ curl -X POST https://3b0fe305-de58-4f8c-9b1f-6ac365d51561-00-2cx3283bumy11.kirk.
 
 ```bash
 # Step 1 — Get payment config (amount, token, recipient address)
-curl https://3b0fe305-de58-4f8c-9b1f-6ac365d51561-00-2cx3283bumy11.kirk.replit.dev/api/v1/x402/config
+curl https://sovereignomega.onrender.com/api/v1/x402/config
 
 # Step 2 — Send $PROS or USDC payment on Pharos Atlantic testnet (chain ID 688689)
 #   USDC testnet address: 0xE0BE08c77f415F577A1B3A9aD7a1Df1479564ec8
 #   Facilitator: https://facilitator.pharos.xyz
 
 # Step 3 — Verify payment and receive a nonce
-curl -X POST https://3b0fe305-de58-4f8c-9b1f-6ac365d51561-00-2cx3283bumy11.kirk.replit.dev/api/v1/x402/verify \
+curl -X POST https://sovereignomega.onrender.com/api/v1/x402/verify \
   -H "Content-Type: application/json" \
   -d '{"tx_hash": "0x<your-tx>", "skill_id": "trade_evaluate", "token": "PROS"}'
 
 # Step 4 — Invoke premium skill with payment proof
-curl -X POST https://3b0fe305-de58-4f8c-9b1f-6ac365d51561-00-2cx3283bumy11.kirk.replit.dev/api/v1/skills/invoke/trade_evaluate \
+curl -X POST https://sovereignomega.onrender.com/api/v1/skills/invoke/trade_evaluate \
   -H "Content-Type: application/json" \
   -d '{
     "skill_id": "trade_evaluate",
@@ -88,7 +88,7 @@ SOVEREIGN-Ω exposes a full MCP JSON-RPC 2.0 endpoint at `/mcp`:
 {
   "mcpServers": {
     "sovereign-omega": {
-      "url": "https://3b0fe305-de58-4f8c-9b1f-6ac365d51561-00-2cx3283bumy11.kirk.replit.dev/api/v1/mcp",
+      "url": "https://sovereignomega.onrender.com/api/v1/mcp",
       "transport": "http"
     }
   }
@@ -133,8 +133,8 @@ If Ψ(t) < Δ(t) (dynamic threshold), the agent invokes the **Silence Protocol**
 
 ## Live Demo
 
-- Homepage: `https://3b0fe305-de58-4f8c-9b1f-6ac365d51561-00-2cx3283bumy11.kirk.replit.dev/`
-- Dashboard: `https://3b0fe305-de58-4f8c-9b1f-6ac365d51561-00-2cx3283bumy11.kirk.replit.dev/dashboard`
-- Pipeline: `https://3b0fe305-de58-4f8c-9b1f-6ac365d51561-00-2cx3283bumy11.kirk.replit.dev/pipeline`
-- Swagger: `https://3b0fe305-de58-4f8c-9b1f-6ac365d51561-00-2cx3283bumy11.kirk.replit.dev/docs`
-- Agent Card: `https://3b0fe305-de58-4f8c-9b1f-6ac365d51561-00-2cx3283bumy11.kirk.replit.dev/.well-known/agent.json`
+- Homepage: `https://sovereignomega.onrender.com/`
+- Dashboard: `https://sovereignomega.onrender.com/dashboard`
+- Pipeline: `https://sovereignomega.onrender.com/pipeline`
+- Swagger: `https://sovereignomega.onrender.com/docs`
+- Agent Card: `https://sovereignomega.onrender.com/.well-known/agent.json`
