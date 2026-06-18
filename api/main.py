@@ -583,6 +583,33 @@ nav {
 .mv-bl { color:var(--blue); }
 .mv-mt { color:var(--muted); font-size:.72rem; }
 
+/* ── ROW 5: FEDERATION ── */
+.fed-c {
+  background:var(--s1); border:1px solid var(--border);
+  border-radius:var(--r); padding:1.25rem;
+}
+.peers-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(200px,1fr)); gap:.65rem; margin-top:.875rem; }
+.peer-card {
+  background:var(--s2); border:1px solid var(--border);
+  border-radius:var(--rsm); padding:.85rem;
+  display:flex; flex-direction:column; gap:.3rem;
+  transition:border-color .2s;
+}
+.peer-card:hover { border-color:var(--border-b); }
+.peer-card.psi-ok { border-left:3px solid var(--green); }
+.peer-card.psi-low { border-left:3px solid var(--amber); }
+.peer-id { font-family:'JetBrains Mono',monospace; font-size:.68rem; color:var(--dim); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.peer-name { font-size:.78rem; font-weight:600; color:var(--text); }
+.peer-psi-row { display:flex; align-items:center; gap:.5rem; margin-top:.2rem; }
+.peer-psi-val { font-family:'JetBrains Mono',monospace; font-size:.8rem; font-weight:600; }
+.peer-psi-bar { flex:1; height:4px; background:var(--s3); border-radius:2px; overflow:hidden; }
+.peer-psi-fill { height:4px; border-radius:2px; background:linear-gradient(90deg,#059669,#34d399); }
+.no-peers {
+  text-align:center; padding:1.5rem; color:var(--muted);
+  font-size:.78rem; border:1px dashed var(--border); border-radius:var(--rsm);
+  margin-top:.875rem;
+}
+
 /* ── RESPONSIVE ── */
 @media (max-width:1200px) {
   .stats-row { grid-template-columns:1fr 1fr; }
@@ -827,6 +854,21 @@ nav {
 
   </div>
 
+  <!-- ROW 5 — FEDERATION PEERS -->
+  <div class="fed-c">
+    <div class="chdr">
+      <span class="clbl">Federation Peers</span>
+      <span style="font-size:.67rem;color:var(--muted)">Peers that passed the Ψ coherence gate &middot; live A2A mesh</span>
+      <span id="fed-badge" style="font-size:.63rem;font-weight:500;padding:.18rem .55rem;border-radius:100px;background:var(--s3);color:var(--muted)">0 peers</span>
+    </div>
+    <div id="fed-peers">
+      <div class="no-peers" id="no-peers-msg">
+        No federation peers connected yet &mdash; any agent that announces itself and passes Ψ &ge; Δ will appear here<br>
+        <span style="font-size:.7rem;margin-top:.4rem;display:inline-block">POST /api/v1/federation/announce to join the mesh</span>
+      </div>
+    </div>
+  </div>
+
 </div><!-- .dash -->
 
 <script>
@@ -877,7 +919,8 @@ function buildChart(id, lineColor, fillColor0, fillColor1, yMin, yMax) {
       scales: {
         x: { display: false },
         y: {
-          min: yMin, max: yMax,
+          ...(yMin != null ? {min: yMin} : {}),
+          ...(yMax != null ? {max: yMax} : {}),
           grid:   { color: 'rgba(30,42,58,.9)' },
           ticks:  { color: '#475569', font: { size: 10, family: 'JetBrains Mono' }, maxTicksLimit: 5 },
           border: { display: false }
@@ -921,7 +964,7 @@ window.addEventListener('DOMContentLoaded', () => {
     '#3b82f6',
     'rgba(59,130,246,0.28)',
     'rgba(59,130,246,0.0)',
-    null, null
+    0, null
   );
   connect();
 });
@@ -934,26 +977,70 @@ function push(chart, val) {
   chart.update('none');
 }
 
-// ── SSE ─────────────────────────────────────────────────────────────────────
-let sse = null, lastSeq = -1;
+// ── Transport: WebSocket → SSE fallback ──────────────────────────────────────
+let sse = null, wsConn = null, lastSeq = -1;
 const hist = [];
 const MAX_HIST = 50;
 
-function setConn(s) {
+function setConn(s, mode) {
   const pill = document.getElementById('cpill');
   const lbl  = document.getElementById('clbl');
-  if (s === 'live')         { pill.className = 'live'; lbl.textContent = '● Live'; }
-  else if (s === 'retry')   { pill.className = '';     lbl.textContent = '↻ Reconnecting…'; }
-  else                      { pill.className = '';     lbl.textContent = '⟳ Connecting…'; }
+  if (s === 'live') {
+    pill.className = 'live';
+    lbl.textContent = (mode === 'ws' ? '⚡ Live WS' : '● Live SSE');
+  } else if (s === 'retry') {
+    pill.className = '';
+    lbl.textContent = '↻ Reconnecting…';
+  } else {
+    pill.className = '';
+    lbl.textContent = '⟳ Connecting…';
+  }
+}
+
+function useSse() {
+  if (sse) { sse.close(); sse = null; }
+  setConn('connecting', 'sse');
+  sse = new EventSource('/api/v1/stream/dashboard');
+  sse.onopen    = () => setConn('live', 'sse');
+  sse.onmessage = e => { try { const d = JSON.parse(e.data); if (d.type !== 'state') return; onFrame(d); } catch {} };
+  sse.onerror   = () => { setConn('retry'); sse.close(); sse = null; setTimeout(useSse, 3000); };
 }
 
 function connect() {
-  if (sse) { sse.close(); sse = null; }
   setConn('connecting');
-  sse = new EventSource('/api/v1/stream/dashboard');
-  sse.onopen    = () => setConn('live');
-  sse.onmessage = e => { try { onFrame(JSON.parse(e.data)); } catch {} };
-  sse.onerror   = () => { setConn('retry'); sse.close(); sse = null; setTimeout(connect, 3000); };
+  const proto = location.protocol === 'https:' ? 'wss:' : 'ws:';
+  const wsUrl  = proto + '//' + location.host + '/ws/dashboard';
+  let wsOpened = false;
+  try {
+    wsConn = new WebSocket(wsUrl);
+  } catch(e) { useSse(); return; }
+
+  wsConn.onopen = () => { wsOpened = true; setConn('live', 'ws'); };
+  wsConn.onmessage = e => {
+    try {
+      const d = JSON.parse(e.data);
+      if (d.type === 'hello' || d.type !== 'state') return;
+      onFrame(d);
+    } catch {}
+  };
+  wsConn.onerror = () => {};
+  wsConn.onclose = ev => {
+    wsConn = null;
+    if (!wsOpened) {
+      useSse();
+    } else {
+      setConn('retry');
+      setTimeout(connect, 3000);
+    }
+  };
+
+  // Fallback to SSE if WS doesn't open within 4 s
+  setTimeout(() => {
+    if (wsConn && wsConn.readyState !== WebSocket.OPEN) {
+      wsConn.close(); wsConn = null;
+      useSse();
+    }
+  }, 4000);
 }
 
 // ── Format helpers ───────────────────────────────────────────────────────────
@@ -1040,6 +1127,36 @@ function onFrame(d) {
   document.getElementById('m-next').textContent  = (d.next_sync_in ?? '—') + ' cycles';
   document.getElementById('m-peers').textContent = d.peer_count ?? '0';
   document.getElementById('m-seq').textContent   = '#' + (d.seq ?? 0);
+
+  // Federation peers map
+  const peers = d.peers || [];
+  const badge = document.getElementById('fed-badge');
+  const fedEl = document.getElementById('fed-peers');
+  if (badge) badge.textContent = peers.length + (peers.length === 1 ? ' peer' : ' peers');
+  if (fedEl) {
+    if (peers.length === 0) {
+      const existing = document.getElementById('no-peers-msg');
+      if (!existing) {
+        fedEl.innerHTML = '<div class="no-peers" id="no-peers-msg">No federation peers connected yet &mdash; any agent that announces itself and passes Ψ &ge; Δ will appear here<br><span style="font-size:.7rem;margin-top:.4rem;display:inline-block">POST /api/v1/federation/announce to join the mesh</span></div>';
+      }
+    } else {
+      fedEl.innerHTML = '<div class="peers-grid">' + peers.map(p => {
+        const psi   = p.psi != null ? parseFloat(p.psi) : null;
+        const psiOk = psi != null && psi >= 0.65;
+        const bar   = psi != null ? (psi * 100).toFixed(1) : '0';
+        const psiTxt = psi != null ? psi.toFixed(4) : '—';
+        return `<div class="peer-card ${psiOk ? 'psi-ok' : 'psi-low'}">
+          <div class="peer-name">${p.name || 'Unknown Agent'}</div>
+          <div class="peer-id">${(p.id || '').slice(0,22)}…</div>
+          <div class="peer-psi-row">
+            <span class="peer-psi-val" style="color:${psiOk ? 'var(--green)' : 'var(--amber)'}">${psiTxt}</span>
+            <div class="peer-psi-bar"><div class="peer-psi-fill" style="width:${bar}%;background:${psiOk ? 'linear-gradient(90deg,#059669,#34d399)' : 'linear-gradient(90deg,#d97706,#fbbf24)'}"></div></div>
+          </div>
+          <div style="font-size:.62rem;color:var(--muted)">${p.status || 'active'}</div>
+        </div>`;
+      }).join('') + '</div>';
+    }
+  }
 
   // Feed — log every distinct frame
   if (d.seq !== lastSeq) {
