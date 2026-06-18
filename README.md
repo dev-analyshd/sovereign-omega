@@ -205,12 +205,3 @@ Every individual action also emits a per-action heartbeat to chain.
 
 - **Testnet**: Chain ID 688689 | RPC: https://testnet.pharosnetwork.xyz | Explorer: https://testnet.pharosscan.xyz
 - **Mainnet**: Chain ID 1672 | RPC: https://rpc.pharos.xyz | Explorer: https://pharosscan.xyz
-
-## Note on LLM Reasoning
-
-The `ANTHROPIC_API_KEY` must be a valid key from [console.anthropic.com](https://console.anthropic.com) for the P (Perceptual) and C (Consensus) planes to score fully. Without it:
-- P = 0.0 (no signal entropy from LLM output)
-- C is reduced (no reasoning chain convergence)
-- Ψ stays low → gate stays SILENT (by design — the Silence Protocol refuses to act without full cognitive coherence)
-
-This is correct behaviour. Set the key in Replit Secrets → `ANTHROPIC_API_KEY`.
