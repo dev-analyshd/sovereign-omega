@@ -25,6 +25,13 @@ async def lifespan(app: FastAPI):
     from learning.intelligence_score import IntelligenceScorer
     from core.moat_accumulator import MoatAccumulator
 
+    if os.getenv("TIMESCALE_URL"):
+        try:
+            from storage.db import get_pool
+            await get_pool()
+        except Exception as e:
+            print(f"[DB] TimescaleDB init error: {e}")
+
     moat_acc = MoatAccumulator()
     scorer = IntelligenceScorer()
     iq = await scorer.compute()

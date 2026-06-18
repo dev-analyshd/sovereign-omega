@@ -10,6 +10,17 @@ from reasoning.embedding_engine import EmbeddingEngine
 from core.moat_accumulator import MoatAccumulator
 
 
+def _make_store():
+    if os.getenv("TIMESCALE_URL"):
+        try:
+            from memory.timescale_store import TimescaleStore
+            print("[LEARN] Using TimescaleDB vector store")
+            return TimescaleStore()
+        except Exception as e:
+            print(f"[LEARN] TimescaleStore unavailable: {e} — falling back to FAISS")
+    return FAISSStore()
+
+
 class ContinuousLearner:
     """
     L_rate(t) = L₀ · e^(-λ_decay · t) · (1 + boost · SILENCE_density(t))
@@ -25,7 +36,7 @@ class ContinuousLearner:
         self.mastery_engine = DomainMasteryEngine()
         self.intelligence_scorer = IntelligenceScorer()
         self.dual_strand = DualStrandMemory()
-        self.faiss = FAISSStore()
+        self.store = _make_store()
         self.embedder = EmbeddingEngine()
         self.moat = MoatAccumulator()
         self.recent_silences = []
@@ -54,16 +65,21 @@ class ContinuousLearner:
         learning_rate = self.compute_learning_rate()
 
         query_embedding = self.embedder.embed(query)
-        self.faiss.add(
-            query_embedding,
-            {
-                "cycle_id": cycle_id,
-                "domain": domain,
-                "gate_open": gate_open,
-                "psi": plane_scores.get("psi_total", 0),
-                "timestamp": datetime.now(timezone.utc).isoformat(),
-            },
-        )
+        meta = {
+            "cycle_id": cycle_id,
+            "domain": domain,
+            "gate_open": gate_open,
+            "psi": plane_scores.get("psi_total", 0),
+            "timestamp": datetime.now(timezone.utc).isoformat(),
+        }
+
+        from memory.timescale_store import TimescaleStore
+        if isinstance(self.store, TimescaleStore):
+            await self.store.add(query_embedding, meta)
+            store_total = await self.store.total()
+        else:
+            self.store.add(query_embedding, meta)
+            store_total = self.store.total()
 
         if gate_open and action_output and outcome:
             await self._learn_from_action_outcome(query, action_output, outcome, domain, learning_rate)
@@ -78,7 +94,7 @@ class ContinuousLearner:
         if len(self.recent_silences) % 100 == 0:
             await self._sync_to_pharos(iq)
 
-        return {"learning_rate": learning_rate, "iq": iq, "faiss_total": self.faiss.total()}
+        return {"learning_rate": learning_rate, "iq": iq, "memory_total": store_total}
 
     async def _learn_from_action_outcome(self, query, output, outcome, domain, learning_rate):
         if outcome.get("correct", True):

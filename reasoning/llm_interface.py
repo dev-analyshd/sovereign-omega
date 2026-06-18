@@ -36,8 +36,14 @@ class LLMInterface:
 
         nvidia_key = os.getenv("NVIDIA_API_KEY")
         if nvidia_key and HTTPX_AVAILABLE:
+            import asyncio
             self.provider = "nvidia"
             self.nvidia_key = nvidia_key
+            self._nvidia_client = httpx.AsyncClient(
+                timeout=httpx.Timeout(connect=10.0, read=45.0, write=10.0, pool=10.0),
+                limits=httpx.Limits(max_connections=10, max_keepalive_connections=5),
+            )
+            self._nvidia_sem = asyncio.Semaphore(1)
             print("[LLM] Using NVIDIA NIM API (Llama-3.3-70B)")
             return
 
@@ -104,21 +110,26 @@ class LLMInterface:
             "Authorization": f"Bearer {self.nvidia_key}",
             "Content-Type": "application/json",
         }
-        try:
-            async with httpx.AsyncClient(timeout=30) as client:
-                resp = await client.post(
-                    f"{self.NVIDIA_BASE_URL}/chat/completions",
-                    json=payload,
-                    headers=headers,
-                )
+        for attempt in range(2):
+            try:
+                async with self._nvidia_sem:
+                    resp = await self._nvidia_client.post(
+                        f"{self.NVIDIA_BASE_URL}/chat/completions",
+                        json=payload,
+                        headers=headers,
+                    )
                 resp.raise_for_status()
                 data = resp.json()
                 text = data["choices"][0]["message"]["content"]
                 confidence = self._extract_confidence(text)
                 return text, confidence
-        except Exception as e:
-            print(f"[LLM NVIDIA] Error: {e} — falling back to mock")
-            return self._mock_response(query), self._mock_confidence(query)
+            except Exception as e:
+                if attempt == 0:
+                    import asyncio
+                    await asyncio.sleep(2)
+                    continue
+                print(f"[LLM NVIDIA] Error ({type(e).__name__}): {e} — falling back to mock")
+                return self._mock_response(query), self._mock_confidence(query)
 
     async def _reason_minimax(
         self, query: str, context: dict, system_prompt: str
