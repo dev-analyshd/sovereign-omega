@@ -32,18 +32,23 @@ class MoatAccumulator:
             self.t_start    = datetime.now(timezone.utc).timestamp()
             self._save()
 
+    MAX_LOG_LAMBDA = 700.0  # math.exp(700) is huge but finite; above this, inf
+
     def accumulate(self, eta_i: float, rho_i: float, cycle_id: str = ""):
         """Accumulate moat. Λ can only grow."""
         if eta_i <= 0 or rho_i <= 0:
             return
         increment = math.log(1 + eta_i * rho_i)
         old_log = self.log_lambda
-        self.log_lambda = old_log + increment
+        self.log_lambda = min(old_log + increment, self.MAX_LOG_LAMBDA)
         self.n_cycles += 1
         self._save()
 
     def get_current_lambda(self) -> float:
-        return math.exp(self.log_lambda)
+        try:
+            return math.exp(self.log_lambda)
+        except OverflowError:
+            return float("inf")
 
     def get_t_normalized(self) -> float:
         elapsed = datetime.now(timezone.utc).timestamp() - self.t_start

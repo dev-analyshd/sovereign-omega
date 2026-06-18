@@ -23,7 +23,7 @@ class InferentialPlane:
             for i in range(len(vectors)):
                 for j in range(i + 1, len(vectors)):
                     cosine = self._cosine_similarity(vectors[i], vectors[j])
-                    if cosine < self.CONTRADICTION_THRESHOLD:
+                    if cosine <= self.CONTRADICTION_THRESHOLD:
                         return 0.0
 
         if not confidences:

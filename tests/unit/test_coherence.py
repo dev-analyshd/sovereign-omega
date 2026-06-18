@@ -36,8 +36,8 @@ def test_action_gate_thresholds():
 def test_perceptual_zero_below_threshold():
     from planes.perceptual import PerceptualPlane
     p = PerceptualPlane()
-    # All same values → zero entropy → below 0.35 → floor to 0.0
-    score = p.compute({"channel": [1.0, 1.0, 1.0, 1.0]})
+    # Single spike among zeros → concentrated mass → entropy/H_max < 0.35 → floor to 0.0
+    score = p.compute({"channel": [0.0] * 99 + [1000.0]})
     assert score == 0.0
 
 
