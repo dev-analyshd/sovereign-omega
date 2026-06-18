@@ -20,17 +20,26 @@ except ImportError:
 class LLMInterface:
     """
     LLM reasoning interface.
-    Priority: MiniMax → Anthropic (Claude) → Mock
+    Priority: NVIDIA NIM → MiniMax → Anthropic (Claude) → Mock
     Extracts CONFIDENCE score from responses.
     """
 
     ANTHROPIC_MODEL = "claude-haiku-4-5"
     MINIMAX_MODEL = "MiniMax-Text-01"
     MINIMAX_BASE_URL = "https://api.minimax.chat/v1"
+    NVIDIA_MODEL = "meta/llama-3.3-70b-instruct"
+    NVIDIA_BASE_URL = "https://integrate.api.nvidia.com/v1"
 
     def __init__(self):
         self.provider = None
         self.client = None
+
+        nvidia_key = os.getenv("NVIDIA_API_KEY")
+        if nvidia_key and HTTPX_AVAILABLE:
+            self.provider = "nvidia"
+            self.nvidia_key = nvidia_key
+            print("[LLM] Using NVIDIA NIM API (Llama-3.3-70B)")
+            return
 
         minimax_key = os.getenv("MINIMAX_API_KEY")
         if minimax_key and HTTPX_AVAILABLE:
@@ -66,11 +75,49 @@ class LLMInterface:
     ) -> Tuple[str, float]:
         """Returns (response_text, confidence_score)."""
 
-        if self.provider == "minimax":
+        if self.provider == "nvidia":
+            return await self._reason_nvidia(query, context, system_prompt)
+        elif self.provider == "minimax":
             return await self._reason_minimax(query, context, system_prompt)
         elif self.provider == "anthropic":
             return await self._reason_anthropic(query, context, system_prompt)
         else:
+            return self._mock_response(query), self._mock_confidence(query)
+
+    async def _reason_nvidia(
+        self, query: str, context: dict, system_prompt: str
+    ) -> Tuple[str, float]:
+        system = system_prompt or (
+            "You are SOVEREIGN-Ω, a disciplined autonomous reasoning agent. "
+            "Reason carefully and end every response with: CONFIDENCE: 0.XX"
+        )
+        payload = {
+            "model": self.NVIDIA_MODEL,
+            "messages": [
+                {"role": "system", "content": system},
+                {"role": "user", "content": query},
+            ],
+            "max_tokens": 1024,
+            "temperature": 0.7,
+        }
+        headers = {
+            "Authorization": f"Bearer {self.nvidia_key}",
+            "Content-Type": "application/json",
+        }
+        try:
+            async with httpx.AsyncClient(timeout=30) as client:
+                resp = await client.post(
+                    f"{self.NVIDIA_BASE_URL}/chat/completions",
+                    json=payload,
+                    headers=headers,
+                )
+                resp.raise_for_status()
+                data = resp.json()
+                text = data["choices"][0]["message"]["content"]
+                confidence = self._extract_confidence(text)
+                return text, confidence
+        except Exception as e:
+            print(f"[LLM NVIDIA] Error: {e} — falling back to mock")
             return self._mock_response(query), self._mock_confidence(query)
 
     async def _reason_minimax(
