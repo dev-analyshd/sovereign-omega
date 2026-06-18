@@ -126,6 +126,20 @@ app.include_router(stream.router, prefix="/api/v1", tags=["Live Streaming (SSE)"
 app.include_router(ws_dashboard.router, tags=["Dashboard (WebSocket)"])
 
 
+@app.get("/favicon.ico", include_in_schema=False)
+async def favicon():
+    """SVG favicon — eliminates browser 404."""
+    from fastapi.responses import Response
+    svg = (
+        '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">'
+        '<rect width="32" height="32" rx="7" fill="#7c3aed"/>'
+        '<text x="16" y="23" font-size="20" font-family="serif" font-weight="bold" '
+        'text-anchor="middle" fill="white">\u03a9</text>'
+        '</svg>'
+    )
+    return Response(content=svg, media_type="image/svg+xml")
+
+
 @app.get("/", response_class=HTMLResponse, include_in_schema=False)
 async def root():
     from core.moat_accumulator import MoatAccumulator
@@ -946,26 +960,27 @@ function onFrame(d) {
   gapEl.style.color = gap >= 0 ? 'var(--green)' : 'var(--red)';
 
   // Moat card
-  document.getElementById('v-lam').textContent  = fmt(d.lambda, 2);
-  document.getElementById('v-llam').textContent = d.log_lambda != null ? d.log_lambda.toFixed(4) : '—';
+  const lamVal = d.lambda != null ? d.lambda : 1;
+  document.getElementById('v-lam').textContent  = fmt(lamVal, 2);
+  const ll = d.log_lambda;
+  document.getElementById('v-llam').textContent = ll != null ? (ll < 0 ? '0.0000' : ll.toFixed(4)) : '—';
 
   // IQ + cycles card
   document.getElementById('v-iq').textContent  = fmt(d.iq, 2);
   document.getElementById('v-cyc').textContent = (d.cycles ?? 0).toLocaleString();
 
   // Charts — pre-fill on first frame so line is visible immediately
+  const moatVal = (d.log_lambda != null && d.log_lambda > 0) ? d.log_lambda : 0;
   if (lastSeq === -1) {
-    chartPsi.data.datasets[0].data  = Array(WIN).fill(psi);
-    chartPsi.data.labels             = Array(WIN).fill('');
+    chartPsi.data.datasets[0].data   = Array(WIN).fill(psi);
+    chartPsi.data.labels              = Array(WIN).fill('');
     chartPsi.update('none');
-    if (d.log_lambda != null) {
-      chartMoat.data.datasets[0].data = Array(WIN).fill(d.log_lambda);
-      chartMoat.data.labels            = Array(WIN).fill('');
-      chartMoat.update('none');
-    }
+    chartMoat.data.datasets[0].data  = Array(WIN).fill(moatVal);
+    chartMoat.data.labels             = Array(WIN).fill('');
+    chartMoat.update('none');
   } else {
     push(chartPsi, psi);
-    if (d.log_lambda != null) push(chartMoat, d.log_lambda);
+    push(chartMoat, moatVal);
   }
 
   // Planes

@@ -13,7 +13,7 @@ class MoatAccumulator:
     Λ₀ = 0.01. Λ never decreases. Ever.
     """
 
-    LAMBDA_0 = 0.01
+    LAMBDA_0 = 1.0  # log(1.0) = 0.0 — clean start, never negative
 
     def __init__(self):
         self._load_or_init()
@@ -24,12 +24,12 @@ class MoatAccumulator:
             with open(STATE_FILE) as f:
                 state = json.load(f)
             self.log_lambda = state["log_lambda"]
-            self.n_cycles = state["n_cycles"]
-            self.t_start = state["t_start"]
+            self.n_cycles   = state["n_cycles"]
+            self.t_start    = state["t_start"]
         else:
-            self.log_lambda = math.log(self.LAMBDA_0)
-            self.n_cycles = 0
-            self.t_start = datetime.now(timezone.utc).timestamp()
+            self.log_lambda = math.log(self.LAMBDA_0)  # 0.0 on fresh start
+            self.n_cycles   = 0
+            self.t_start    = datetime.now(timezone.utc).timestamp()
             self._save()
 
     def accumulate(self, eta_i: float, rho_i: float, cycle_id: str = ""):

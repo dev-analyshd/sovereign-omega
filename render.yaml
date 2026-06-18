@@ -32,6 +32,11 @@ services:
       - key: TRADING_ENABLED
         value: "true"
 
+      # ── Public URL override (agent card / A2A discovery) ───────────────────
+      # Render auto-sets RENDER_EXTERNAL_URL, but set this too for clarity
+      - key: SOVEREIGN_URL
+        value: "https://sovereignomega.onrender.com"
+
       # ── Optional: AI reasoning (real LLM vs mock mode) ──────────────────────
       - key: ANTHROPIC_API_KEY
         sync: false          # Set manually in Render dashboard
