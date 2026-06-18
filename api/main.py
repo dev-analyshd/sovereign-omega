@@ -300,542 +300,705 @@ async def root():
 
 @app.get("/dashboard", response_class=HTMLResponse, include_in_schema=False)
 async def dashboard():
-    return f"""<!DOCTYPE html>
+    return """<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>SOVEREIGN-Ω · Live Dashboard</title>
+<title>SOVEREIGN-Ω · Intelligence Dashboard</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <style>
-  :root {{
-    --bg:      #06060e;
-    --surface: #0d0d1c;
-    --border:  #1e1e3a;
-    --accent:  #7c5cfc;
-    --green:   #2ecc71;
-    --orange:  #f39c12;
-    --red:     #e74c3c;
-    --text:    #c8c8f0;
-    --muted:   #4a4a7a;
-    --silence: #c0392b;
-    --open:    #27ae60;
-  }}
-  * {{ margin:0; padding:0; box-sizing:border-box; }}
-  html,body {{ height:100%; background:var(--bg); color:var(--text); font-family:'Courier New',monospace; overflow-x:hidden; }}
+:root {
+  --bg:       #030712;
+  --s1:       #0d1117;
+  --s2:       #111827;
+  --s3:       #1e2a3a;
+  --border:   rgba(148,163,184,0.07);
+  --border-b: rgba(148,163,184,0.14);
+  --accent:   #8b5cf6;
+  --accent-d: rgba(139,92,246,0.14);
+  --blue:     #3b82f6;
+  --blue-d:   rgba(59,130,246,0.14);
+  --green:    #10b981;
+  --green-d:  rgba(16,185,129,0.11);
+  --red:      #f43f5e;
+  --red-d:    rgba(244,63,94,0.11);
+  --amber:    #f59e0b;
+  --amber-d:  rgba(245,158,11,0.11);
+  --text:     #e2e8f0;
+  --dim:      #94a3b8;
+  --muted:    #475569;
+  --r:        12px;
+  --rsm:      8px;
+}
 
-  /* ── top bar ── */
-  #topbar {{
-    display:flex; align-items:center; justify-content:space-between;
-    background:var(--surface); border-bottom:1px solid var(--border);
-    padding:0.65rem 1.4rem; position:sticky; top:0; z-index:100;
-  }}
-  #topbar .brand {{ color:var(--accent); font-size:1.1rem; letter-spacing:.1em; font-weight:700; }}
-  #topbar .formula {{ color:var(--muted); font-size:0.72rem; }}
-  #ws-status {{ font-size:0.72rem; padding:0.25rem 0.7rem; border-radius:12px;
-    background:#1a1a0a; color:var(--orange); border:1px solid var(--orange); }}
-  #ws-status.connected {{ background:#0a1a0a; color:var(--green); border-color:var(--green); }}
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+html { font-size: 16px; scroll-behavior: smooth; }
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  min-height: 100vh;
+  overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+}
+body::before {
+  content: '';
+  position: fixed; inset: 0; z-index: 0; pointer-events: none;
+  background:
+    radial-gradient(ellipse 70% 55% at 12% 12%, rgba(139,92,246,0.045) 0%, transparent 60%),
+    radial-gradient(ellipse 55% 65% at 88% 88%, rgba(59,130,246,0.045) 0%, transparent 60%);
+}
 
-  /* ── main grid ── */
-  #grid {{
-    display:grid;
-    grid-template-columns: 240px 1fr 1fr 260px;
-    grid-template-rows: auto auto auto;
-    gap:1px; background:var(--border);
-    min-height:calc(100vh - 48px);
-  }}
-  .panel {{
-    background:var(--surface); padding:1.1rem; overflow:hidden;
-    display:flex; flex-direction:column; gap:0.6rem;
-  }}
-  .panel-title {{
-    font-size:0.65rem; text-transform:uppercase; letter-spacing:.15em;
-    color:var(--muted); padding-bottom:0.5rem; border-bottom:1px solid var(--border);
-  }}
+/* ── NAV ── */
+nav {
+  position: sticky; top: 0; z-index: 200; height: 56px;
+  background: rgba(13,17,23,0.93);
+  backdrop-filter: blur(24px); -webkit-backdrop-filter: blur(24px);
+  border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 0 1.5rem;
+}
+.nav-brand { display: flex; align-items: center; gap: 0.75rem; }
+.nav-logo {
+  width: 32px; height: 32px; border-radius: 8px; flex-shrink: 0;
+  background: linear-gradient(135deg, #7c3aed, #2563eb);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1.1rem; font-weight: 700; color: #fff;
+  box-shadow: 0 0 18px rgba(124,58,237,0.4);
+}
+.nav-title {
+  font-size: 1rem; font-weight: 700; letter-spacing: 0.06em;
+  background: linear-gradient(135deg, #a78bfa, #60a5fa);
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+.nav-sub { font-size: 0.67rem; color: var(--muted); margin-top: 1px; }
+.nav-right { display: flex; align-items: center; gap: 1.25rem; }
+.nav-a {
+  font-size: 0.8rem; color: var(--muted);
+  text-decoration: none; transition: color .2s;
+  white-space: nowrap;
+}
+.nav-a:hover { color: var(--dim); }
+#cpill {
+  display: flex; align-items: center; gap: 0.4rem;
+  padding: .28rem .75rem; border-radius: 100px;
+  border: 1px solid var(--border-b); background: var(--s2);
+  font-size: .75rem; font-weight: 500; color: var(--muted);
+  transition: all .35s;
+}
+#cpill.live { background: rgba(16,185,129,.09); border-color: rgba(16,185,129,.28); color: var(--green); }
+#cdot { width:7px; height:7px; border-radius:50%; background:currentColor; flex-shrink:0; }
+#cpill.live #cdot { animation: blink 1.8s ease infinite; }
+@keyframes blink { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:.4;transform:scale(.75)} }
 
-  /* ── gate ── */
-  #gate-panel {{ grid-column:1; grid-row:1; align-items:center; justify-content:center; }}
-  #gate-badge {{
-    font-size:1.6rem; font-weight:700; letter-spacing:.12em;
-    padding:1rem 1.5rem; border-radius:10px; text-align:center;
-    border:2px solid; transition:all .4s ease;
-    width:100%;
-  }}
-  #gate-badge.silence {{ color:var(--silence); border-color:var(--silence); background:#1a0808;
-    box-shadow:0 0 20px rgba(192,57,43,0.3); }}
-  #gate-badge.open {{ color:var(--open); border-color:var(--open); background:#081a08;
-    box-shadow:0 0 20px rgba(39,174,96,0.4); animation:pulse-open 1.5s ease infinite; }}
-  @keyframes pulse-open {{
-    0%,100% {{ box-shadow:0 0 20px rgba(39,174,96,0.4); }}
-    50%      {{ box-shadow:0 0 40px rgba(39,174,96,0.7); }}
-  }}
-  .gate-sub {{ font-size:0.75rem; color:var(--muted); text-align:center; }}
-  #psi-val {{ font-size:2.4rem; font-weight:700; color:var(--accent); text-align:center; line-height:1; }}
-  #delta-val {{ font-size:0.78rem; color:var(--muted); text-align:center; }}
+/* ── LAYOUT ── */
+.dash {
+  position: relative; z-index: 1;
+  padding: 1.25rem; max-width: 1800px; margin: 0 auto;
+  display: flex; flex-direction: column; gap: 1rem;
+}
 
-  /* ── psi chart ── */
-  #psi-panel {{ grid-column:2; grid-row:1; }}
+/* ── CARD BASE ── */
+.card {
+  background: var(--s1); border: 1px solid var(--border);
+  border-radius: var(--r); padding: 1.25rem;
+  position: relative; overflow: hidden;
+}
+.clbl {
+  font-size: .68rem; font-weight: 600;
+  text-transform: uppercase; letter-spacing: .12em; color: var(--muted);
+}
+.chdr { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1rem; }
+.ctag {
+  font-size: .63rem; font-weight: 500;
+  padding: .18rem .55rem; border-radius: 100px;
+}
 
-  /* ── lambda chart ── */
-  #lambda-panel {{ grid-column:3; grid-row:1; }}
+/* ── ROW 1: STAT CARDS ── */
+.stats-row { display: grid; grid-template-columns: 210px 1fr 1fr 1fr; gap: 1rem; }
 
-  /* ── planes panel ── */
-  #planes-panel {{ grid-column:4; grid-row:1; }}
-  .plane-row {{ display:flex; flex-direction:column; gap:2px; margin-bottom:0.5rem; }}
-  .plane-label {{ display:flex; justify-content:space-between; font-size:0.72rem; }}
-  .plane-name {{ color:var(--muted); }}
-  .plane-score {{ color:var(--text); font-weight:700; }}
-  .plane-bar-bg {{ height:6px; background:#1a1a2e; border-radius:3px; overflow:hidden; }}
-  .plane-bar {{ height:6px; border-radius:3px; transition:width .5s ease; }}
-  .plane-p {{ background:#9b59b6; }}
-  .plane-i {{ background:#3498db; }}
-  .plane-c {{ background:#1abc9c; }}
-  .plane-s {{ background:#e67e22; }}
-  .plane-w {{ background:#e74c3c; }}
+/* Gate card */
+.gate-c {
+  background: var(--s1); border: 1px solid var(--border);
+  border-radius: var(--r); padding: 1.5rem 1.1rem;
+  min-height: 190px; display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  gap: .7rem; text-align: center;
+  position: relative; overflow: hidden;
+  transition: border-color .5s, background .5s;
+}
+.gate-c::after {
+  content: ''; position: absolute; inset: 0;
+  background: radial-gradient(ellipse at 50% 110%, var(--gc) 0%, transparent 65%);
+  opacity: .07; pointer-events: none;
+}
+.gate-sil { border-color: rgba(244,63,94,.24); --gc: #f43f5e; }
+.gate-opn { border-color: rgba(16,185,129,.32); --gc: #10b981; animation: gopn 2.5s ease infinite; }
+@keyframes gopn { 0%,100%{box-shadow:0 0 0 0 rgba(16,185,129,0)} 50%{box-shadow:0 0 28px rgba(16,185,129,.13)} }
+.gate-orb {
+  width:56px; height:56px; border-radius:50%; border:2px solid;
+  display:flex; align-items:center; justify-content:center;
+  font-size:1.5rem; transition:all .4s;
+}
+.gate-sil .gate-orb { border-color:rgba(244,63,94,.4); background:var(--red-d); }
+.gate-opn .gate-orb { border-color:rgba(16,185,129,.45); background:var(--green-d); animation:orbp 1.8s ease infinite; }
+@keyframes orbp { 0%,100%{box-shadow:0 0 0 0 rgba(16,185,129,.5)} 50%{box-shadow:0 0 0 10px rgba(16,185,129,0)} }
+#glbl { font-size:1.05rem; font-weight:700; letter-spacing:.1em; transition:color .4s; }
+.gate-sil #glbl { color:var(--red); }
+.gate-opn #glbl { color:var(--green); }
+#gdsc { font-size:.7rem; color:var(--muted); line-height:1.5; max-width:155px; }
 
-  /* ── metrics strip ── */
-  #metrics-panel {{ grid-column:1/-1; grid-row:2; flex-direction:row; flex-wrap:wrap; gap:1.5rem; align-items:center; }}
-  .metric {{ display:flex; flex-direction:column; gap:2px; }}
-  .metric-label {{ font-size:0.62rem; text-transform:uppercase; letter-spacing:.1em; color:var(--muted); }}
-  .metric-value {{ font-size:1.05rem; font-weight:700; color:var(--text); }}
-  .metric-value.accent {{ color:var(--accent); }}
-  .metric-value.green {{ color:var(--green); }}
-  .metric-value.orange {{ color:var(--orange); }}
+/* Stat card */
+.sc {
+  background: var(--s1); border: 1px solid var(--border);
+  border-radius: var(--r); padding: 1.5rem;
+  display: flex; flex-direction: column; gap: .35rem;
+  min-height: 190px; position: relative; overflow: hidden;
+}
+.sc::before {
+  content: ''; position: absolute; top:-24px; right:-24px;
+  width:90px; height:90px; border-radius:50%; opacity:.07;
+}
+.sc-pu::before { background: var(--accent); }
+.sc-bl::before { background: var(--blue); }
+.sc-gr::before { background: var(--green); }
+.sclbl { font-size:.68rem; font-weight:600; text-transform:uppercase; letter-spacing:.12em; color:var(--muted); }
+.scval {
+  font-family:'JetBrains Mono',monospace;
+  font-size:2rem; font-weight:600; line-height:1;
+  margin-top:auto; transition:color .3s;
+}
+.sv-pu { color:var(--accent); }
+.sv-bl { color:var(--blue); }
+.sv-gr { color:var(--green); }
+.sv-am { color:var(--amber); }
+.scsub { font-size:.7rem; color:var(--muted); margin-top:.2rem; }
+.trk { height:4px; background:var(--s3); border-radius:2px; overflow:hidden; margin-top:.6rem; }
+.tfil { height:4px; border-radius:2px; transition:width .7s cubic-bezier(.4,0,.2,1); }
+.tf-pu { background:linear-gradient(90deg,#7c3aed,#a78bfa); }
+.tf-bl { background:linear-gradient(90deg,#1d4ed8,#60a5fa); }
+.chain-row { display:flex; align-items:center; gap:.4rem; margin-top:.5rem; }
+.cdot2 { width:7px; height:7px; border-radius:50%; background:var(--green); animation:blink 1.8s ease infinite; }
 
-  /* ── heartbeat ── */
-  #hb-dot {{
-    width:10px; height:10px; border-radius:50%;
-    background:var(--green); display:inline-block;
-    animation:hb 1s ease infinite;
-  }}
-  @keyframes hb {{
-    0%,100% {{ opacity:1; transform:scale(1); }}
-    50%      {{ opacity:0.4; transform:scale(0.7); }}
-  }}
+/* ── ROW 2: CHARTS ── */
+.charts-row { display:grid; grid-template-columns:1fr 1fr; gap:1rem; }
+.chart-c {
+  background:var(--s1); border:1px solid var(--border);
+  border-radius:var(--r); padding:1.25rem;
+}
+.chart-wrap { position:relative; height:200px; width:100%; }
 
-  /* ── federation ── */
-  #fed-panel {{ grid-column:1/3; grid-row:3; }}
-  #fed-svg {{ width:100%; flex:1; min-height:200px; }}
+/* ── ROW 3: PLANES ── */
+.planes-wrap {
+  background:var(--s1); border:1px solid var(--border);
+  border-radius:var(--r); padding:1.25rem;
+}
+.planes-grid { display:grid; grid-template-columns:repeat(5,1fr); gap:.875rem; margin-top:1rem; }
+.pcard {
+  background:var(--s2); border:1px solid var(--border);
+  border-radius:var(--rsm); padding:1rem;
+  display:flex; flex-direction:column; gap:.4rem;
+  transition:border-color .2s;
+}
+.pcard:hover { border-color:var(--border-b); }
+.pico  { font-size:1.25rem; line-height:1; }
+.pnm   { font-size:.72rem; font-weight:600; color:var(--dim); }
+.pwt   { font-size:.62rem; color:var(--muted); }
+.pval  { font-family:'JetBrains Mono',monospace; font-size:1.5rem; font-weight:600; transition:color .4s; }
+.ptrk  { height:6px; background:var(--s3); border-radius:3px; overflow:hidden; margin-top:.25rem; }
+.pfil  { height:6px; border-radius:3px; transition:width .7s cubic-bezier(.4,0,.2,1); }
+.pnote { font-size:.62rem; color:var(--muted); line-height:1.4; margin-top:.2rem; }
 
-  /* ── action feed ── */
-  #feed-panel {{ grid-column:3/-1; grid-row:3; }}
-  #action-feed {{ flex:1; overflow-y:auto; font-size:0.72rem; display:flex; flex-direction:column; gap:4px; }}
-  .feed-item {{
-    padding:0.35rem 0.6rem; border-radius:4px; border-left:3px solid;
-    background:#0a0a18; display:flex; gap:0.6rem; align-items:baseline;
-  }}
-  .feed-item.silence {{ border-color:var(--silence); color:#c07070; }}
-  .feed-item.open    {{ border-color:var(--open); color:#70c070; }}
-  .feed-time {{ color:var(--muted); font-size:0.65rem; flex-shrink:0; }}
-  .feed-gate {{ font-weight:700; flex-shrink:0; width:52px; }}
-  .feed-psi  {{ color:var(--muted); }}
+/* ── ROW 4: FEED + METRICS ── */
+.bottom-row { display:grid; grid-template-columns:1fr 1fr; gap:1rem; }
 
-  /* responsive */
-  @media (max-width:900px) {{
-    #grid {{ grid-template-columns:1fr 1fr; grid-template-rows:auto auto auto auto auto; }}
-    #gate-panel   {{ grid-column:1; grid-row:1; }}
-    #planes-panel {{ grid-column:2; grid-row:1; }}
-    #psi-panel    {{ grid-column:1/-1; grid-row:2; }}
-    #lambda-panel {{ grid-column:1/-1; grid-row:3; }}
-    #metrics-panel {{ grid-column:1/-1; grid-row:4; }}
-    #fed-panel    {{ grid-column:1/-1; grid-row:5; }}
-    #feed-panel   {{ grid-column:1/-1; grid-row:6; }}
-  }}
+.feed-c {
+  background:var(--s1); border:1px solid var(--border);
+  border-radius:var(--r); padding:1.25rem;
+  display:flex; flex-direction:column; max-height:300px;
+}
+#feed-list {
+  flex:1; overflow-y:auto; margin-top:.875rem;
+  display:flex; flex-direction:column; gap:.35rem;
+  scrollbar-width:thin; scrollbar-color:var(--s3) transparent;
+}
+.frow {
+  display:flex; align-items:center; gap:.6rem;
+  padding:.45rem .7rem; border-radius:var(--rsm);
+  background:var(--s2); border:1px solid var(--border);
+  font-size:.74rem; animation:slide-in .25s ease;
+}
+@keyframes slide-in { from{opacity:0;transform:translateY(-6px)} to{opacity:1;transform:none} }
+.fdot { width:7px; height:7px; border-radius:50%; flex-shrink:0; }
+.fdot-s { background:var(--red); }
+.fdot-o { background:var(--green); }
+.fst { font-weight:600; width:52px; flex-shrink:0; }
+.fst-s { color:var(--red); }
+.fst-o { color:var(--green); }
+.fsc { font-family:'JetBrains Mono',monospace; color:var(--dim); flex:1; font-size:.72rem; }
+.ftm { font-size:.67rem; color:var(--muted); flex-shrink:0; }
+
+.met-c {
+  background:var(--s1); border:1px solid var(--border);
+  border-radius:var(--r); padding:1.25rem;
+}
+.met-grid { display:grid; grid-template-columns:1fr 1fr; gap:.65rem; margin-top:.875rem; }
+.mi {
+  background:var(--s2); border:1px solid var(--border);
+  border-radius:var(--rsm); padding:.75rem;
+  transition:border-color .2s;
+}
+.mi:hover { border-color:var(--border-b); }
+.mlbl { font-size:.62rem; font-weight:600; text-transform:uppercase; letter-spacing:.1em; color:var(--muted); margin-bottom:.3rem; }
+.mval { font-family:'JetBrains Mono',monospace; font-size:.92rem; font-weight:600; color:var(--text); }
+.mv-gr { color:var(--green); }
+.mv-am { color:var(--amber); }
+.mv-pu { color:var(--accent); }
+.mv-bl { color:var(--blue); }
+.mv-mt { color:var(--muted); font-size:.72rem; }
+
+/* ── RESPONSIVE ── */
+@media (max-width:1200px) {
+  .stats-row { grid-template-columns:1fr 1fr; }
+  .gate-c { min-height:auto; }
+}
+@media (max-width:900px) {
+  .charts-row { grid-template-columns:1fr; }
+  .planes-grid { grid-template-columns:repeat(3,1fr); }
+  .bottom-row { grid-template-columns:1fr; }
+}
+@media (max-width:640px) {
+  .dash { padding:.75rem; gap:.75rem; }
+  nav   { padding:0 .875rem; }
+  .nav-sub, .nav-a:not(:last-of-type) { display:none; }
+  .stats-row  { grid-template-columns:1fr; }
+  .planes-grid { grid-template-columns:1fr 1fr; }
+  .scval { font-size:1.65rem; }
+  .met-grid { grid-template-columns:1fr; }
+}
+@media (max-width:400px) {
+  .planes-grid { grid-template-columns:1fr; }
+}
 </style>
 </head>
 <body>
 
-<div id="topbar">
-  <div>
-    <div class="brand">SOVEREIGN-Ω</div>
-    <div class="formula">Ω(a,t) = [Ψ(t) ≥ Δ(t)] · R(a,t) · e<sup>Λ·t</sup> &nbsp;|&nbsp; Truth or silence. The silence is information.</div>
-  </div>
-  <div style="display:flex;gap:1rem;align-items:center">
-    <a href="/" style="color:var(--muted);font-size:0.72rem;text-decoration:none">← Home</a>
-    <a href="/docs" style="color:var(--muted);font-size:0.72rem;text-decoration:none">API Docs</a>
-    <div id="ws-status">⟳ Connecting…</div>
-  </div>
-</div>
-
-<div id="grid">
-
-  <!-- Gate + Ψ -->
-  <div class="panel" id="gate-panel">
-    <div class="panel-title">Action Gate</div>
-    <div id="gate-badge" class="silence">SILENCE</div>
-    <div class="gate-sub">gate status</div>
-    <div id="psi-val">0.000</div>
-    <div id="delta-val">Δ = 0.0000 &nbsp;|&nbsp; Ψ − Δ = 0.0000</div>
-    <div style="margin-top:auto;font-size:0.68rem;color:var(--muted);line-height:1.5">
-      When Ψ &lt; Δ the agent is silent. Silence is not failure — it is information.
+<!-- NAV -->
+<nav>
+  <div class="nav-brand">
+    <div class="nav-logo">&#937;</div>
+    <div>
+      <div class="nav-title">SOVEREIGN-&#937;</div>
+      <div class="nav-sub">Autonomous Intelligence &middot; Pharos Chain 688689</div>
     </div>
   </div>
-
-  <!-- Ψ rolling chart -->
-  <div class="panel" id="psi-panel">
-    <div class="panel-title">Ψ Coherence Score — live (60s window)</div>
-    <canvas id="psiChart" style="flex:1;min-height:0"></canvas>
-  </div>
-
-  <!-- Λ growth chart -->
-  <div class="panel" id="lambda-panel">
-    <div class="panel-title">log(Λ) Compounding Moat — live (60s window)</div>
-    <canvas id="lambdaChart" style="flex:1;min-height:0"></canvas>
-  </div>
-
-  <!-- 5 planes -->
-  <div class="panel" id="planes-panel">
-    <div class="panel-title">5 Cognitive Planes</div>
-    <div class="plane-row">
-      <div class="plane-label"><span class="plane-name">P · Perceptual   (×0.25)</span><span class="plane-score" id="p-score">0.000</span></div>
-      <div class="plane-bar-bg"><div class="plane-bar plane-p" id="p-bar" style="width:0%"></div></div>
-    </div>
-    <div class="plane-row">
-      <div class="plane-label"><span class="plane-name">I · Inferential  (×0.30)</span><span class="plane-score" id="i-score">0.000</span></div>
-      <div class="plane-bar-bg"><div class="plane-bar plane-i" id="i-bar" style="width:0%"></div></div>
-    </div>
-    <div class="plane-row">
-      <div class="plane-label"><span class="plane-name">C · Consensus    (×0.20)</span><span class="plane-score" id="c-score">0.000</span></div>
-      <div class="plane-bar-bg"><div class="plane-bar plane-c" id="c-bar" style="width:0%"></div></div>
-    </div>
-    <div class="plane-row">
-      <div class="plane-label"><span class="plane-name">S · Self-Reflect (×0.15)</span><span class="plane-score" id="s-score">0.000</span></div>
-      <div class="plane-bar-bg"><div class="plane-bar plane-s" id="s-bar" style="width:0%"></div></div>
-    </div>
-    <div class="plane-row">
-      <div class="plane-label"><span class="plane-name">W · World Model  (×0.10)</span><span class="plane-score" id="w-score">0.000</span></div>
-      <div class="plane-bar-bg"><div class="plane-bar plane-w" id="w-bar" style="width:0%"></div></div>
-    </div>
-    <div style="margin-top:0.6rem;padding-top:0.6rem;border-top:1px solid var(--border);font-size:0.68rem;color:var(--muted);line-height:1.6">
-      Contradiction → I=0<br>World z&gt;3σ → W=0<br>No LLM → P=0, C↓
+  <div class="nav-right">
+    <a href="/" class="nav-a">Home</a>
+    <a href="/docs" class="nav-a">API Docs</a>
+    <a href="/api/v1/health" class="nav-a" target="_blank">Health</a>
+    <div id="cpill">
+      <div id="cdot"></div>
+      <span id="clbl">Connecting&hellip;</span>
     </div>
   </div>
+</nav>
 
-  <!-- Metrics strip -->
-  <div class="panel" id="metrics-panel">
-    <div class="metric">
-      <div class="metric-label"><span id="hb-dot"></span> Heartbeat</div>
-      <div class="metric-value green" id="m-cycles">—</div>
-    </div>
-    <div class="metric">
-      <div class="metric-label">Λ (Moat)</div>
-      <div class="metric-value accent" id="m-lambda">—</div>
-    </div>
-    <div class="metric">
-      <div class="metric-label">log(Λ)</div>
-      <div class="metric-value" id="m-loglambda">—</div>
-    </div>
-    <div class="metric">
-      <div class="metric-label">IQ Score</div>
-      <div class="metric-value" id="m-iq">—</div>
-    </div>
-    <div class="metric">
-      <div class="metric-label">Chain Syncs</div>
-      <div class="metric-value green" id="m-syncs">—</div>
-    </div>
-    <div class="metric">
-      <div class="metric-label">Next Sync In</div>
-      <div class="metric-value orange" id="m-nextsync">— cycles</div>
-    </div>
-    <div class="metric">
-      <div class="metric-label">Federation Peers</div>
-      <div class="metric-value" id="m-peers">—</div>
-    </div>
-    <div class="metric">
-      <div class="metric-label">Chain</div>
-      <div class="metric-value" style="font-size:0.85rem">Pharos Testnet 688689</div>
-    </div>
-    <div class="metric" style="margin-left:auto">
-      <div class="metric-label">Frame</div>
-      <div class="metric-value" id="m-seq" style="font-size:0.85rem;color:var(--muted)">—</div>
-    </div>
-  </div>
+<div class="dash">
 
-  <!-- Federation map -->
-  <div class="panel" id="fed-panel">
-    <div class="panel-title">Federation Network · A2A Peer Map</div>
-    <svg id="fed-svg" viewBox="0 0 500 200"></svg>
-    <div style="font-size:0.68rem;color:var(--muted)">
-      Peers announce via POST /api/v1/federation/announce · Ψ-gated handshake required
-    </div>
-  </div>
+  <!-- ROW 1 — STAT CARDS -->
+  <div class="stats-row">
 
-  <!-- Action feed -->
-  <div class="panel" id="feed-panel">
-    <div class="panel-title">Live Gate Decisions</div>
-    <div id="action-feed">
-      <div class="feed-item silence">
-        <span class="feed-time">--:--:--</span>
-        <span class="feed-gate">SILENCE</span>
-        <span class="feed-psi">Ψ waiting for first frame…</span>
+    <!-- Gate Status -->
+    <div class="gate-c gate-sil" id="gate-card">
+      <div class="gate-orb" id="gorb">&#128263;</div>
+      <div id="glbl">Agent Silent</div>
+      <div id="gdsc">Coherence below threshold &mdash; standing by</div>
+    </div>
+
+    <!-- Coherence Score -->
+    <div class="sc sc-pu">
+      <div class="sclbl">Coherence Score</div>
+      <div class="scval sv-pu" id="v-psi">0.0000</div>
+      <div class="scsub">
+        Threshold: <span id="v-delta">0.0000</span>
+        &nbsp;&middot;&nbsp;
+        Gap: <span id="v-gap" style="transition:color .3s">&#8212;</span>
+      </div>
+      <div class="trk"><div class="tfil tf-pu" id="psi-bar" style="width:0%"></div></div>
+      <div class="scsub" style="margin-top:.5rem;font-size:.65rem">
+        Acts only when score exceeds threshold
       </div>
     </div>
+
+    <!-- Intelligence Moat -->
+    <div class="sc sc-bl">
+      <div class="sclbl">Intelligence Moat</div>
+      <div class="scval sv-bl" id="v-lam">&#8212;</div>
+      <div class="scsub">
+        log value: <span id="v-llam">&#8212;</span> &nbsp;&middot;&nbsp; Never decreases
+      </div>
+      <div class="trk"><div class="tfil tf-bl" id="lam-bar" style="width:30%"></div></div>
+      <div class="scsub" style="margin-top:.5rem;font-size:.65rem">
+        Compounds every coherent decision cycle
+      </div>
+    </div>
+
+    <!-- IQ + Cycles -->
+    <div class="sc sc-gr">
+      <div class="sclbl">IQ Score</div>
+      <div class="scval sv-gr" id="v-iq">&#8212;</div>
+      <div class="scsub">
+        Decision Cycles: <span id="v-cyc">0</span>
+      </div>
+      <div class="chain-row">
+        <div class="cdot2"></div>
+        <span style="font-size:.68rem;color:var(--muted)">Pharos Testnet &middot; Chain 688689</span>
+      </div>
+      <div class="scsub" style="margin-top:.25rem;font-size:.65rem">
+        Vault: 0xdBbf&hellip;2d20 &nbsp;&middot;&nbsp; 2.0 PROS
+      </div>
+    </div>
+
   </div>
 
-</div>
+  <!-- ROW 2 — CHARTS -->
+  <div class="charts-row">
+
+    <div class="chart-c">
+      <div class="chdr">
+        <span class="clbl">Coherence Score &mdash; Live 60-Second Window</span>
+        <span class="ctag" style="background:var(--accent-d);color:var(--accent)">1s updates</span>
+      </div>
+      <div class="chart-wrap"><canvas id="chartPsi"></canvas></div>
+    </div>
+
+    <div class="chart-c">
+      <div class="chdr">
+        <span class="clbl">Intelligence Moat Growth &mdash; Live 60-Second Window</span>
+        <span class="ctag" style="background:var(--blue-d);color:var(--blue)">Compounding</span>
+      </div>
+      <div class="chart-wrap"><canvas id="chartMoat"></canvas></div>
+    </div>
+
+  </div>
+
+  <!-- ROW 3 — COGNITIVE PLANES -->
+  <div class="planes-wrap">
+    <div class="chdr">
+      <span class="clbl">Cognitive Planes &mdash; Real-Time Scoring</span>
+      <span style="font-size:.67rem;color:var(--muted)">5 independent dimensions &middot; weighted sum = Coherence</span>
+    </div>
+    <div class="planes-grid">
+
+      <div class="pcard">
+        <div class="pico">&#128065;</div>
+        <div class="pnm">Signal Quality</div>
+        <div class="pwt">Weight: 25%</div>
+        <div class="pval" id="pl-p" style="color:#a78bfa">0.000</div>
+        <div class="ptrk"><div class="pfil" id="pb-p" style="width:0%;background:linear-gradient(90deg,#7c3aed,#a78bfa)"></div></div>
+        <div class="pnote">Entropy of input channels. No LLM resets to 0.</div>
+      </div>
+
+      <div class="pcard">
+        <div class="pico">&#129504;</div>
+        <div class="pnm">Logic Depth</div>
+        <div class="pwt">Weight: 30% &mdash; highest</div>
+        <div class="pval" id="pl-i" style="color:#60a5fa">0.000</div>
+        <div class="ptrk"><div class="pfil" id="pb-i" style="width:0%;background:linear-gradient(90deg,#1d4ed8,#60a5fa)"></div></div>
+        <div class="pnote">Reasoning consistency. Contradiction drops to 0.</div>
+      </div>
+
+      <div class="pcard">
+        <div class="pico">&#129309;</div>
+        <div class="pnm">Consensus</div>
+        <div class="pwt">Weight: 20%</div>
+        <div class="pval" id="pl-c" style="color:#34d399">0.000</div>
+        <div class="ptrk"><div class="pfil" id="pb-c" style="width:0%;background:linear-gradient(90deg,#059669,#34d399)"></div></div>
+        <div class="pnote">Independent path convergence scoring.</div>
+      </div>
+
+      <div class="pcard">
+        <div class="pico">&#129710;</div>
+        <div class="pnm">Self-Awareness</div>
+        <div class="pwt">Weight: 15%</div>
+        <div class="pval" id="pl-s" style="color:#fb923c">0.000</div>
+        <div class="ptrk"><div class="pfil" id="pb-s" style="width:0%;background:linear-gradient(90deg,#d97706,#fb923c)"></div></div>
+        <div class="pnote">Memory familiarity &amp; internal consistency.</div>
+      </div>
+
+      <div class="pcard">
+        <div class="pico">&#127760;</div>
+        <div class="pnm">World Model</div>
+        <div class="pwt">Weight: 10%</div>
+        <div class="pval" id="pl-w" style="color:#f87171">0.000</div>
+        <div class="ptrk"><div class="pfil" id="pb-w" style="width:0%;background:linear-gradient(90deg,#dc2626,#f87171)"></div></div>
+        <div class="pnote">Anomaly detection. Above 3&sigma; resets to 0.</div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ROW 4 — FEED + METRICS -->
+  <div class="bottom-row">
+
+    <!-- Decision Feed -->
+    <div class="feed-c">
+      <div class="clbl">Live Decision Feed</div>
+      <div id="feed-list">
+        <div class="frow">
+          <div class="fdot fdot-s"></div>
+          <div class="fst fst-s">Silent</div>
+          <div class="fsc">Waiting for first frame&hellip;</div>
+          <div class="ftm">--:--:--</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- System Metrics -->
+    <div class="met-c">
+      <div class="clbl">System Metrics</div>
+      <div class="met-grid">
+        <div class="mi">
+          <div class="mlbl">Chain Syncs</div>
+          <div class="mval mv-gr" id="m-syncs">0</div>
+        </div>
+        <div class="mi">
+          <div class="mlbl">Next Sync</div>
+          <div class="mval mv-am" id="m-next">&#8212; cycles</div>
+        </div>
+        <div class="mi">
+          <div class="mlbl">Federation Peers</div>
+          <div class="mval mv-bl" id="m-peers">0</div>
+        </div>
+        <div class="mi">
+          <div class="mlbl">Frame</div>
+          <div class="mval mv-mt" id="m-seq">#0</div>
+        </div>
+        <div class="mi">
+          <div class="mlbl">Registry Contract</div>
+          <div class="mval mv-pu" style="font-size:.7rem">0x6EAB&hellip;018Ba</div>
+        </div>
+        <div class="mi">
+          <div class="mlbl">Vault Balance</div>
+          <div class="mval mv-gr">2.0 PROS</div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+</div><!-- .dash -->
 
 <script>
-const WINDOW = 60;
+// ── Chart initialisation ─────────────────────────────────────────────────────
+const WIN = 60;
 
-// ── Chart.js shared config ──────────────────────────────────────────
-const darkGrid = {{ color:'rgba(30,30,60,0.8)' }};
-const makeLabels = () => Array.from({{length:WINDOW}}, (_,i)=>'');
+function buildChart(id, lineColor, fillColor0, fillColor1, yMin, yMax) {
+  const canvas = document.getElementById(id);
+  const ctx    = canvas.getContext('2d');
+  const grad   = ctx.createLinearGradient(0, 0, 0, 200);
+  grad.addColorStop(0, fillColor0);
+  grad.addColorStop(1, fillColor1);
 
-function makeChart(id, label, color, yMin=0, yMax=1) {{
-  const ctx = document.getElementById(id).getContext('2d');
-  return new Chart(ctx, {{
-    type:'line',
-    data:{{
-      labels: makeLabels(),
-      datasets:[{{
-        label,
-        data: new Array(WINDOW).fill(null),
-        borderColor: color,
-        backgroundColor: color.replace(')',',0.08)').replace('rgb','rgba'),
-        borderWidth:2,
-        pointRadius:0,
-        tension:0.35,
-        fill:true,
-      }}]
-    }},
-    options:{{
-      animation:{{ duration:300 }},
-      responsive:true,
-      maintainAspectRatio:false,
-      plugins:{{ legend:{{display:false}}, tooltip:{{ mode:'index', intersect:false }} }},
-      scales:{{
-        x:{{ display:false }},
-        y:{{
-          min:yMin, max:yMax,
-          grid: darkGrid,
-          ticks:{{ color:'#4a4a7a', font:{{size:10}} }}
-        }}
-      }}
-    }}
-  }});
-}}
+  return new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels: Array(WIN).fill(''),
+      datasets: [{
+        data: Array(WIN).fill(null),
+        borderColor: lineColor,
+        backgroundColor: grad,
+        borderWidth: 2,
+        pointRadius: 0,
+        tension: 0.4,
+        fill: true,
+        spanGaps: true,
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      animation: { duration: 250 },
+      interaction: { mode: 'index', intersect: false },
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          backgroundColor: 'rgba(13,17,23,.96)',
+          borderColor: 'rgba(148,163,184,.14)',
+          borderWidth: 1,
+          titleColor: '#64748b',
+          bodyColor: '#e2e8f0',
+          padding: 10,
+          callbacks: {
+            label: c => ' ' + (c.parsed.y != null ? c.parsed.y.toFixed(4) : '\u2014')
+          }
+        }
+      },
+      scales: {
+        x: { display: false },
+        y: {
+          min: yMin, max: yMax,
+          grid:   { color: 'rgba(30,42,58,.9)' },
+          ticks:  { color: '#475569', font: { size: 10, family: 'JetBrains Mono' }, maxTicksLimit: 5 },
+          border: { display: false }
+        }
+      }
+    }
+  });
+}
 
-const psiChart    = makeChart('psiChart',    'Ψ Coherence', 'rgb(124,92,252)', 0, 1);
-const lambdaChart = makeChart('lambdaChart', 'log(Λ) Moat', 'rgb(46,204,113)', 0, null);
+let chartPsi, chartMoat;
 
-function pushChart(chart, val, yMax=null) {{
-  chart.data.datasets[0].data.push(val);
-  if (chart.data.datasets[0].data.length > WINDOW)
-    chart.data.datasets[0].data.shift();
+window.addEventListener('DOMContentLoaded', () => {
+  chartPsi = buildChart(
+    'chartPsi',
+    '#8b5cf6',
+    'rgba(139,92,246,0.28)',
+    'rgba(139,92,246,0.0)',
+    0, 1
+  );
+  chartMoat = buildChart(
+    'chartMoat',
+    '#3b82f6',
+    'rgba(59,130,246,0.28)',
+    'rgba(59,130,246,0.0)',
+    null, null
+  );
+  connect();
+});
+
+function push(chart, val) {
+  const ds = chart.data.datasets[0];
+  ds.data.push(val);
   chart.data.labels.push('');
-  if (chart.data.labels.length > WINDOW) chart.data.labels.shift();
-  if (yMax !== null) chart.options.scales.y.max = yMax;
+  if (ds.data.length > WIN) { ds.data.shift(); chart.data.labels.shift(); }
   chart.update('none');
-}}
+}
 
-// ── Federation SVG ──────────────────────────────────────────────────
-const SVG_NS = 'http://www.w3.org/2000/svg';
-function renderFedSVG(peers) {{
-  const svg = document.getElementById('fed-svg');
-  svg.innerHTML = '';
-  const W=500, H=200, cx=W/2, cy=H/2, r=70;
+// ── SSE ─────────────────────────────────────────────────────────────────────
+let sse = null, lastSeq = -1;
+const hist = [];
+const MAX_HIST = 50;
 
-  // Hub node
-  const hubG = document.createElementNS(SVG_NS,'g');
-  const hubCirc = document.createElementNS(SVG_NS,'circle');
-  hubCirc.setAttribute('cx',cx); hubCirc.setAttribute('cy',cy);
-  hubCirc.setAttribute('r',22); hubCirc.setAttribute('fill','#1a0a3a');
-  hubCirc.setAttribute('stroke','#7c5cfc'); hubCirc.setAttribute('stroke-width','2');
-  const hubText = document.createElementNS(SVG_NS,'text');
-  hubText.setAttribute('x',cx); hubText.setAttribute('y',cy-6);
-  hubText.setAttribute('text-anchor','middle'); hubText.setAttribute('fill','#a080ff');
-  hubText.setAttribute('font-size','9'); hubText.setAttribute('font-family','Courier New');
-  hubText.textContent = 'SOVEREIGN';
-  const hubText2 = document.createElementNS(SVG_NS,'text');
-  hubText2.setAttribute('x',cx); hubText2.setAttribute('y',cy+7);
-  hubText2.setAttribute('text-anchor','middle'); hubText2.setAttribute('fill','#7c5cfc');
-  hubText2.setAttribute('font-size','9'); hubText2.setAttribute('font-family','Courier New');
-  hubText2.textContent = '-Ω';
-  hubG.appendChild(hubCirc); hubG.appendChild(hubText); hubG.appendChild(hubText2);
+function setConn(s) {
+  const pill = document.getElementById('cpill');
+  const lbl  = document.getElementById('clbl');
+  if (s === 'live')         { pill.className = 'live'; lbl.textContent = '● Live'; }
+  else if (s === 'retry')   { pill.className = '';     lbl.textContent = '↻ Reconnecting…'; }
+  else                      { pill.className = '';     lbl.textContent = '⟳ Connecting…'; }
+}
 
-  // Pulse ring
-  const pulse = document.createElementNS(SVG_NS,'circle');
-  pulse.setAttribute('cx',cx); pulse.setAttribute('cy',cy); pulse.setAttribute('r',28);
-  pulse.setAttribute('fill','none'); pulse.setAttribute('stroke','#7c5cfc');
-  pulse.setAttribute('stroke-width','1'); pulse.setAttribute('opacity','0.4');
-  const animEl = document.createElementNS(SVG_NS,'animate');
-  animEl.setAttribute('attributeName','r'); animEl.setAttribute('from','22');
-  animEl.setAttribute('to','36'); animEl.setAttribute('dur','2s');
-  animEl.setAttribute('repeatCount','indefinite');
-  const animOp = document.createElementNS(SVG_NS,'animate');
-  animOp.setAttribute('attributeName','opacity'); animOp.setAttribute('from','0.4');
-  animOp.setAttribute('to','0'); animOp.setAttribute('dur','2s');
-  animOp.setAttribute('repeatCount','indefinite');
-  pulse.appendChild(animEl); pulse.appendChild(animOp);
-  svg.appendChild(pulse);
+function connect() {
+  if (sse) { sse.close(); sse = null; }
+  setConn('connecting');
+  sse = new EventSource('/api/v1/stream/dashboard');
+  sse.onopen    = () => setConn('live');
+  sse.onmessage = e => { try { onFrame(JSON.parse(e.data)); } catch {} };
+  sse.onerror   = () => { setConn('retry'); sse.close(); sse = null; setTimeout(connect, 3000); };
+}
 
-  if (peers.length === 0) {{
-    const nopeers = document.createElementNS(SVG_NS,'text');
-    nopeers.setAttribute('x',cx); nopeers.setAttribute('y',H-14);
-    nopeers.setAttribute('text-anchor','middle'); nopeers.setAttribute('fill','#3a3a6a');
-    nopeers.setAttribute('font-size','10'); nopeers.setAttribute('font-family','Courier New');
-    nopeers.textContent = 'No peers yet — announce via POST /api/v1/federation/announce';
-    svg.appendChild(nopeers);
-    svg.appendChild(hubG);
-    return;
-  }}
-
-  // Peer nodes arranged in arc
-  peers.slice(0,12).forEach((p,i) => {{
-    const angle = (2*Math.PI/peers.length)*i - Math.PI/2;
-    const px = cx + r*Math.cos(angle);
-    const py = cy + r*Math.sin(angle);
-
-    // Edge
-    const line = document.createElementNS(SVG_NS,'line');
-    line.setAttribute('x1',cx); line.setAttribute('y1',cy);
-    line.setAttribute('x2',px); line.setAttribute('y2',py);
-    const edgeColor = p.status==='active' ? '#2ecc71' : p.status==='invited' ? '#f39c12' : '#7c5cfc';
-    line.setAttribute('stroke',edgeColor); line.setAttribute('stroke-width','1');
-    line.setAttribute('opacity','0.5'); line.setAttribute('stroke-dasharray','4,3');
-    svg.appendChild(line);
-
-    // Peer circle
-    const pc = document.createElementNS(SVG_NS,'circle');
-    pc.setAttribute('cx',px); pc.setAttribute('cy',py); pc.setAttribute('r',12);
-    pc.setAttribute('fill','#0a0a1a'); pc.setAttribute('stroke',edgeColor);
-    pc.setAttribute('stroke-width','1.5');
-    svg.appendChild(pc);
-
-    // Label
-    const lbl = document.createElementNS(SVG_NS,'text');
-    lbl.setAttribute('x',px); lbl.setAttribute('y',py+4);
-    lbl.setAttribute('text-anchor','middle'); lbl.setAttribute('fill',edgeColor);
-    lbl.setAttribute('font-size','7'); lbl.setAttribute('font-family','Courier New');
-    const shortName = (p.name||'agent').slice(0,8);
-    lbl.textContent = shortName;
-    svg.appendChild(lbl);
-
-    // Ψ label below
-    if (p.psi != null) {{
-      const psiLbl = document.createElementNS(SVG_NS,'text');
-      const lblY = py + (py>cy ? 22 : -14);
-      psiLbl.setAttribute('x',px); psiLbl.setAttribute('y',lblY);
-      psiLbl.setAttribute('text-anchor','middle'); psiLbl.setAttribute('fill','#4a4a7a');
-      psiLbl.setAttribute('font-size','7'); psiLbl.setAttribute('font-family','Courier New');
-      psiLbl.textContent = `Ψ=${{p.psi.toFixed(3)}}`;
-      svg.appendChild(psiLbl);
-    }}
-  }});
-
-  svg.appendChild(hubG);
-}}
-
-// ── Action feed ─────────────────────────────────────────────────────
-const feed = document.getElementById('action-feed');
-const feedHistory = [];
-const MAX_FEED = 30;
-
-function addFeedItem(gate, psi, ts) {{
-  feedHistory.unshift({{gate, psi, ts}});
-  if (feedHistory.length > MAX_FEED) feedHistory.pop();
-  feed.innerHTML = feedHistory.map(f => {{
-    const t = new Date(f.ts).toTimeString().slice(0,8);
-    const cls = f.gate === 'OPEN' ? 'open' : 'silence';
-    return `<div class="feed-item ${{cls}}">
-      <span class="feed-time">${{t}}</span>
-      <span class="feed-gate">${{f.gate}}</span>
-      <span class="feed-psi">Ψ=${{f.psi.toFixed(4)}}</span>
-    </div>`;
-  }}).join('');
-}}
-
-// ── Helpers ─────────────────────────────────────────────────────────
-function fmtBig(n) {{
+// ── Format helpers ───────────────────────────────────────────────────────────
+function fmt(n, d=2) {
   if (n == null) return '—';
-  if (n >= 1e18) return n.toExponential(3);
-  if (n >= 1e12) return (n/1e12).toFixed(2)+'T';
-  if (n >= 1e9)  return (n/1e9).toFixed(2)+'B';
-  if (n >= 1e6)  return (n/1e6).toFixed(2)+'M';
-  return n.toFixed(4);
-}}
+  if (n >= 1e15) return n.toExponential(2);
+  if (n >= 1e9)  return (n/1e9).toFixed(d) + 'B';
+  if (n >= 1e6)  return (n/1e6).toFixed(d) + 'M';
+  if (n >= 1e3)  return (n/1e3).toFixed(d) + 'K';
+  return n.toFixed(d);
+}
 
-function updatePlanes(planes) {{
-  ['p','i','c','s','w'].forEach(k => {{
-    const v = planes[k] ?? 0;
-    document.getElementById(`${{k}}-score`).textContent = v.toFixed(4);
-    document.getElementById(`${{k}}-bar`).style.width = (v*100).toFixed(1)+'%';
-  }});
-}}
-
-// ── SSE Dashboard Stream ─────────────────────────────────────────────
-let lastSeq = -1;
-let maxLogLam = 60;
-let sseSource = null;
-
-function onFrame(d) {{
+// ── Main frame handler ───────────────────────────────────────────────────────
+function onFrame(d) {
   if (d.type !== 'state') return;
 
-  const gate  = d.gate || 'SILENCE';
-  const badge = document.getElementById('gate-badge');
-  badge.textContent = gate;
-  badge.className   = gate === 'OPEN' ? 'open' : 'silence';
-  document.getElementById('psi-val').textContent = (d.psi||0).toFixed(4);
-  document.getElementById('delta-val').textContent =
-    `Δ = ${{(d.delta||0).toFixed(4)}} | Ψ−Δ = ${{((d.psi||0)-(d.delta||0)).toFixed(4)}}`;
+  const psi   = d.psi   ?? 0;
+  const delta = d.delta ?? 0;
+  const gate  = d.gate  || 'SILENCE';
+  const pl    = d.planes || {};
 
-  pushChart(psiChart, d.psi ?? null);
-  if (d.log_lambda != null) {{
-    maxLogLam = Math.max(maxLogLam, d.log_lambda * 1.05);
-    lambdaChart.options.scales.y.max = Math.ceil(maxLogLam);
-    pushChart(lambdaChart, d.log_lambda);
-  }}
+  // Gate card
+  const gc = document.getElementById('gate-card');
+  const orb = document.getElementById('gorb');
+  const glbl = document.getElementById('glbl');
+  const gdsc = document.getElementById('gdsc');
+  if (gate === 'OPEN') {
+    gc.className  = 'gate-c gate-opn';
+    orb.innerHTML = '&#9889;';
+    glbl.textContent = 'Agent Active';
+    gdsc.textContent = 'Coherence above threshold — executing decisions';
+  } else {
+    gc.className  = 'gate-c gate-sil';
+    orb.innerHTML = '&#128263;';
+    glbl.textContent = 'Agent Silent';
+    gdsc.textContent = 'Coherence below threshold — standing by';
+  }
 
-  if (d.planes) updatePlanes(d.planes);
+  // Coherence stat card
+  document.getElementById('v-psi').textContent   = psi.toFixed(4);
+  document.getElementById('v-delta').textContent = delta.toFixed(4);
+  document.getElementById('psi-bar').style.width = (psi * 100).toFixed(1) + '%';
+  const gap = psi - delta;
+  const gapEl = document.getElementById('v-gap');
+  gapEl.textContent = (gap >= 0 ? '+' : '') + gap.toFixed(4);
+  gapEl.style.color = gap >= 0 ? 'var(--green)' : 'var(--red)';
 
-  document.getElementById('m-cycles').textContent    = (d.cycles||0).toLocaleString();
-  document.getElementById('m-lambda').textContent    = fmtBig(d.lambda);
-  document.getElementById('m-loglambda').textContent = (d.log_lambda||0).toFixed(4);
-  document.getElementById('m-iq').textContent        = fmtBig(d.iq);
-  document.getElementById('m-syncs').textContent     = d.chain_syncs ?? '—';
-  document.getElementById('m-nextsync').textContent  = `${{d.next_sync_in ?? '—'}} cycles`;
-  document.getElementById('m-peers').textContent     = d.peer_count ?? 0;
-  document.getElementById('m-seq').textContent       = `#${{d.seq ?? 0}}`;
+  // Moat card
+  document.getElementById('v-lam').textContent  = fmt(d.lambda, 2);
+  document.getElementById('v-llam').textContent = d.log_lambda != null ? d.log_lambda.toFixed(4) : '—';
 
-  renderFedSVG(d.peers || []);
+  // IQ + cycles card
+  document.getElementById('v-iq').textContent  = fmt(d.iq, 2);
+  document.getElementById('v-cyc').textContent = (d.cycles ?? 0).toLocaleString();
 
-  if (d.seq !== lastSeq && (d.seq % 10 === 0 || lastSeq === -1)) {{
-    addFeedItem(gate, d.psi||0, d.ts || new Date().toISOString());
-  }}
+  // Charts — pre-fill on first frame so line is visible immediately
+  if (lastSeq === -1) {
+    chartPsi.data.datasets[0].data  = Array(WIN).fill(psi);
+    chartPsi.data.labels             = Array(WIN).fill('');
+    chartPsi.update('none');
+    if (d.log_lambda != null) {
+      chartMoat.data.datasets[0].data = Array(WIN).fill(d.log_lambda);
+      chartMoat.data.labels            = Array(WIN).fill('');
+      chartMoat.update('none');
+    }
+  } else {
+    push(chartPsi, psi);
+    if (d.log_lambda != null) push(chartMoat, d.log_lambda);
+  }
+
+  // Planes
+  [['p','pl-p','pb-p'],['i','pl-i','pb-i'],['c','pl-c','pb-c'],['s','pl-s','pb-s'],['w','pl-w','pb-w']].forEach(([k,vi,bi]) => {
+    const v = pl[k] ?? 0;
+    document.getElementById(vi).textContent        = v.toFixed(3);
+    document.getElementById(bi).style.width        = (v*100).toFixed(1) + '%';
+  });
+
+  // Metrics
+  document.getElementById('m-syncs').textContent = d.chain_syncs ?? '0';
+  document.getElementById('m-next').textContent  = (d.next_sync_in ?? '—') + ' cycles';
+  document.getElementById('m-peers').textContent = d.peer_count ?? '0';
+  document.getElementById('m-seq').textContent   = '#' + (d.seq ?? 0);
+
+  // Feed — log every distinct frame
+  if (d.seq !== lastSeq) {
+    const t   = new Date(d.ts || Date.now()).toTimeString().slice(0,8);
+    const sil = gate !== 'OPEN';
+    hist.unshift({ sil, psi, t });
+    if (hist.length > MAX_HIST) hist.pop();
+
+    document.getElementById('feed-list').innerHTML = hist.map(h => `
+      <div class="frow">
+        <div class="fdot ${h.sil ? 'fdot-s' : 'fdot-o'}"></div>
+        <div class="fst ${h.sil ? 'fst-s' : 'fst-o'}">${h.sil ? 'Silent' : 'Active'}</div>
+        <div class="fsc">Score: ${h.psi.toFixed(4)}</div>
+        <div class="ftm">${h.t}</div>
+      </div>`).join('');
+  }
+
   lastSeq = d.seq;
-}}
-
-function connect() {{
-  const status = document.getElementById('ws-status');
-  status.textContent = '⟳ Connecting…';
-  status.className   = '';
-
-  if (sseSource) {{ sseSource.close(); sseSource = null; }}
-
-  sseSource = new EventSource('/api/v1/stream/dashboard');
-
-  sseSource.onopen = () => {{
-    status.textContent = '● Live';
-    status.className   = 'connected';
-  }};
-
-  sseSource.onmessage = (e) => {{
-    let d;
-    try {{ d = JSON.parse(e.data); }} catch {{ return; }}
-    onFrame(d);
-  }};
-
-  sseSource.onerror = () => {{
-    status.textContent = '↻ Reconnecting…';
-    status.className   = '';
-    sseSource.close();
-    sseSource = null;
-    setTimeout(connect, 3000);
-  }};
-}}
-
-renderFedSVG([]);
-connect();
+}
 </script>
 </body>
 </html>"""
