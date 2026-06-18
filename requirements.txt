@@ -29,3 +29,8 @@ python-telegram-bot>=21.0
 
 # ── Monitoring ─────────────────────────────────────────────────────────────────
 prometheus-client>=0.21.0
+fastapi
+httpx
+pydantic
+python-dotenv
+uvicorn
