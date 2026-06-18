@@ -9,6 +9,7 @@ from fastapi.responses import HTMLResponse
 from api.routes import action, trade, intelligence, pharos_routes, silence, moat, health
 from api.routes import skills, agent_card, x402, mcp_server
 from api.routes import federation, stream, ws_dashboard
+from api.routes import memory
 
 
 @asynccontextmanager
@@ -116,6 +117,7 @@ app.include_router(intelligence.router, prefix="/api/v1", tags=["Intelligence"])
 app.include_router(pharos_routes.router, prefix="/api/v1", tags=["Pharos Chain"])
 app.include_router(silence.router, prefix="/api/v1", tags=["Silence"])
 app.include_router(moat.router, prefix="/api/v1", tags=["Moat"])
+app.include_router(memory.router, prefix="/api/v1", tags=["Memory"])
 
 # ── Pharos Phase 1 Hackathon: Skill-to-Agent Dual Cascade ─────────────────────
 app.include_router(skills.router, prefix="/api/v1", tags=["Agent Skills (MCP)"])

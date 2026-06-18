@@ -1,0 +1,155 @@
+"
+
+
+Home
+BUIDLs
+Hackathons
+
+
+
+
+
+
+PRIZE POOL
+
+50,000 $PROS
+
+EVENT TIMELINE
+Submission deadline extended
+Upcoming
+Submission
+2026/06/08 05:00
+Deadline
+2026/06/15 16:59
+Extended
+2026/06/18 16:59
+Virtual
+HACKATHON TAGS
+Blockchain
+AI
+Web3
+Hackathon
+Agent
+Onchain
+AgentSkill
+MCP
+PLATFORM TECHNOLOGY
+OpenAI
+SUBMISSION REQUIREMENTS
+GitHub/Gitlab/Bitbucket Link Required
+
+Pharos
+Skill-to-Agent Dual Cascade Hackathon
+Details
+BUIDLs
+Hackers
+490
+Join a Team
+Ask Question
+6
+OUTLINE
+
+Introduction
+Timeline
+Prizes
+Eligibility
+Judging Criteria
+Contact Us
+About Us
+Introduction
+Welcome to the Skill-to-Agent Dual Cascade Hackathon, a 6-week builder event launched by Pharos in partnership with Anvita Flow to celebrate Pharos’ 1st Anniversary.
+
+Pharos is built to power the AI Agent economy, designed for on-chain payments, social interactions, and the deployment of intelligent agents at scale. This hackathon invites developers to help create the foundational layer of the Pharos AI Agent ecosystem by building reusable Skills and fully functional on-chain Agents.
+
+The hackathon follows a dual-phase structure. In the first phase, developers will create Skills - reusable functional modules that AI agents can call to complete specific tasks. In the second phase, builders will combine these Skills to create complete Agents that can operate, transact, and interact on-chain.
+
+With a total prize pool of 50,000 PROS, this hackathon is open to developers who want to build practical, scalable, and composable tools for the next generation of AI-powered on-chain applications.
+
+50K PROS. 2 Phases. 6 Weeks. Open to All Developers.
+
+Join Developer Telegram Group: https://t.me/+U27f5oGnJNlkZTI0
+
+Timeline
+Phase 1: Skill Hackathon June 8 – June 15 Developers will build standardized Skill modules and submit their work through DoraHacks. Submission deadline: June 16 Judging period: June 18 – June 22
+
+Phase 2: Agent Arena June 23 – July 24 Developers will build complete Agents using Phase 1 Skills. Submission deadline: July 6 This phase is open to Phase 1 winners and additional qualified open-entry participants.
+
+Prizes
+A total of 50,000 PROS will be distributed across the full hackathon.
+
+Discord Skill Builder Campaign — 5,000 PROS Awarded to 10 winners from the Pharos Discord community.
+
+Skill Hackathon — 20,000 PROS Awarded to 40 winners who build high-quality, reusable Skill modules.
+
+Agent Arena — 25,000 PROS Awarded to selected Skill Hackathon winners who successfully build and deploy their Agents on Pharos.
+
+Total Hackathon Budget: 50,000 PROS
+
+Eligibility
+The Skill-to-Agent Dual Cascade Hackathon is open to all developers interested in building for the Pharos AI Agent ecosystem.
+
+Developers can participate individually or as teams. Participants are encouraged to build original, practical, and reusable components that can support future AI Agents on Pharos.
+
+The Discord Skill Builder Campaign is designed for Pharos Discord community members, while the main Skill Hackathon is open to all developers through DoraHacks. The Agent Arena is designed for Phase 1 winners and selected open-entry participants who are ready to build complete Agents on top of Pharos.
+
+Judging Criteria
+Projects will be judged based on the quality, usefulness, and ecosystem relevance of the submitted Skills and Agents.
+
+Key judging factors may include:
+
+Originality and creativity of the idea
+Technical quality and completeness
+Practical use case for AI Agents
+Reusability and composability of Skills
+Successful deployment or integration on Pharos
+User experience and clarity of documentation
+Alignment with the Pharos AI Agent and on-chain economy vision
+For Phase 1, judges will focus on the quality and usability of Skill modules. For Phase 2, judges will focus on complete Agents that can meaningfully operate, transact, or interact on-chain using those Skills.
+
+Contact Us
+For hackathon support, updates, and developer discussions, please join the official Pharos community channels.
+
+Developer Telegram: https://t.me/+U27f5oGnJNlkZTI0
+
+Discord: https://discord.com/invite/pharos
+
+Docs: https://docs.pharosnetwork.xyz/
+
+X: https://x.com/Pharos_Network
+
+About Us
+Pharos is built to power the AI Agent economy through scalable on-chain infrastructure for payments, social interactions, and intelligent agent deployment.
+
+As the AI and blockchain ecosystems continue to converge, Pharos aims to provide the infrastructure layer where agents can interact with users, execute tasks, move value, and participate in the on-chain economy.
+
+The Skill-to-Agent Dual Cascade Hackathon is part of Pharos’ wider push to support developers building the future of AI Agents, RealFi, and on-chain automation. The best Skills and Agents from this hackathon may continue into the broader Pharos AI Carnival, giving builders further opportunities to grow their work within the Pharos ecosystem.
+
+
+FOLLOW US
+ABOUT
+Dora Research Blog
+DoraHacks Blog
+Dora Factory
+Changelog
+RESOURCES
+MACI/aMACI Voting
+Host a Hackathon
+Binance Live ↗
+YouTube ↗
+CONTACT US
+
+Report Issue
+
+Message
+Telegram ↗
+Discord ↗
+Email ↗
+© 2026 DoraHacks. All rights reserved.
+
+Code of conduct
+|
+Privacy policy
+|
+Terms of service
+Share"
+ https://dorahacks.io/hackathon/pharos-phase1#:~:text=Home,Share
