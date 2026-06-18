@@ -100,7 +100,7 @@ See `SECURITY.md` for full CertiK Skill Scanner compliance documentation.
 
 ### Invoke a Free Skill (no payment)
 ```bash
-curl -X POST https://your-agent.replit.app/api/v1/skills/invoke/coherence_evaluate \
+curl -X POST https://3b0fe305-de58-4f8c-9b1f-6ac365d51561-00-2cx3283bumy11.kirk.replit.dev/api/v1/skills/invoke/coherence_evaluate \
   -H "Content-Type: application/json" \
   -d '{"skill_id": "coherence_evaluate", "input": {"query": "Should I execute this trade?", "domain": "trading"}}'
 ```
@@ -108,30 +108,30 @@ curl -X POST https://your-agent.replit.app/api/v1/skills/invoke/coherence_evalua
 ### Invoke a Premium Skill (x402 flow)
 ```bash
 # Step 1: Get payment config
-curl https://your-agent.replit.app/api/v1/x402/config
+curl https://3b0fe305-de58-4f8c-9b1f-6ac365d51561-00-2cx3283bumy11.kirk.replit.dev/api/v1/x402/config
 
 # Step 2: Send $PROS payment on Pharos chain
 # (use pharos-agent-kit or ethers.js)
 
 # Step 3: Verify payment and get nonce
-curl -X POST https://your-agent.replit.app/api/v1/x402/verify \
+curl -X POST https://3b0fe305-de58-4f8c-9b1f-6ac365d51561-00-2cx3283bumy11.kirk.replit.dev/api/v1/x402/verify \
   -d '{"tx_hash": "0x...", "skill_id": "trade_evaluate", "token": "PROS"}'
 
 # Step 4: Invoke skill with payment proof
-curl -X POST https://your-agent.replit.app/api/v1/skills/invoke/trade_evaluate \
+curl -X POST https://3b0fe305-de58-4f8c-9b1f-6ac365d51561-00-2cx3283bumy11.kirk.replit.dev/api/v1/skills/invoke/trade_evaluate \
   -d '{"skill_id": "trade_evaluate", "x402_payment_tx": "0x...", "input": {"symbol": "BTC/USDT", "direction": "LONG"}}'
 ```
 
 ### Agent Discovery (A2A / Anvita Flow)
 ```bash
 # Agent card
-curl https://your-agent.replit.app/.well-known/agent.json
+curl https://3b0fe305-de58-4f8c-9b1f-6ac365d51561-00-2cx3283bumy11.kirk.replit.dev/.well-known/agent.json
 
 # Skills manifest
-curl https://your-agent.replit.app/.well-known/skills.json
+curl https://3b0fe305-de58-4f8c-9b1f-6ac365d51561-00-2cx3283bumy11.kirk.replit.dev/.well-known/skills.json
 
 # Runtime discover with live Λ + IQ
-curl https://your-agent.replit.app/api/v1/agent/discover
+curl https://3b0fe305-de58-4f8c-9b1f-6ac365d51561-00-2cx3283bumy11.kirk.replit.dev/api/v1/agent/discover
 ```
 
 ---
@@ -248,9 +248,9 @@ cp .env.example .env
 uvicorn api.main:app --host 0.0.0.0 --port 8000
 
 # Verify
-curl http://localhost:8000/api/v1/health
-curl http://localhost:8000/.well-known/agent.json
-curl http://localhost:8000/api/v1/skills
+curl https://3b0fe305-de58-4f8c-9b1f-6ac365d51561-00-2cx3283bumy11.kirk.replit.dev/api/v1/health
+curl https://3b0fe305-de58-4f8c-9b1f-6ac365d51561-00-2cx3283bumy11.kirk.replit.dev/.well-known/agent.json
+curl https://3b0fe305-de58-4f8c-9b1f-6ac365d51561-00-2cx3283bumy11.kirk.replit.dev/api/v1/skills
 ```
 
 ---
