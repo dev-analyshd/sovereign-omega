@@ -686,6 +686,20 @@ nav {
         <span class="clbl">Coherence Score &mdash; Live 60-Second Window</span>
         <span class="ctag" style="background:var(--accent-d);color:var(--accent)">1s updates</span>
       </div>
+      <div style="display:flex;align-items:center;gap:1.25rem;margin-bottom:.75rem;flex-wrap:wrap">
+        <div style="display:flex;align-items:center;gap:.4rem">
+          <div style="width:20px;height:2px;background:#8b5cf6;border-radius:1px"></div>
+          <span style="font-size:.65rem;color:var(--muted)">Coherence Score</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:.4rem">
+          <div style="width:20px;height:0;border-top:2px dashed rgba(245,158,11,0.75)"></div>
+          <span style="font-size:.65rem;color:var(--muted)">Action Threshold</span>
+        </div>
+        <div style="margin-left:auto;font-size:.65rem;color:var(--muted)">
+          Above threshold &#8594; <span style="color:var(--green);font-weight:600">Agent acts</span>
+          &nbsp;&nbsp;Below &#8594; <span style="color:var(--red);font-weight:600">Silent</span>
+        </div>
+      </div>
       <div class="chart-wrap"><canvas id="chartPsi"></canvas></div>
     </div>
 
@@ -866,6 +880,21 @@ function buildChart(id, lineColor, fillColor0, fillColor1, yMin, yMax) {
 
 let chartPsi, chartMoat;
 
+// Threshold dataset injected into chartPsi after creation
+const THRESHOLD_DATASET = {
+  label: 'Action Threshold',
+  data: Array(WIN).fill(0.6829),  // updated live from SSE
+  borderColor: 'rgba(245,158,11,0.75)',
+  backgroundColor: 'transparent',
+  borderWidth: 1.5,
+  borderDash: [5, 4],
+  pointRadius: 0,
+  tension: 0,
+  fill: false,
+  spanGaps: true,
+  order: 0,  // draws on top
+};
+
 window.addEventListener('DOMContentLoaded', () => {
   chartPsi = buildChart(
     'chartPsi',
@@ -874,6 +903,10 @@ window.addEventListener('DOMContentLoaded', () => {
     'rgba(139,92,246,0.0)',
     0, 1
   );
+  // Inject threshold line as second dataset
+  chartPsi.data.datasets.push(THRESHOLD_DATASET);
+  chartPsi.update('none');
+
   chartMoat = buildChart(
     'chartMoat',
     '#3b82f6',
@@ -968,6 +1001,9 @@ function onFrame(d) {
   // IQ + cycles card
   document.getElementById('v-iq').textContent  = fmt(d.iq, 2);
   document.getElementById('v-cyc').textContent = (d.cycles ?? 0).toLocaleString();
+
+  // Update threshold line — fill all 60 slots with current delta
+  chartPsi.data.datasets[1].data = Array(WIN).fill(delta);
 
   // Charts — pre-fill on first frame so line is visible immediately
   const moatVal = (d.log_lambda != null && d.log_lambda > 0) ? d.log_lambda : 0;
