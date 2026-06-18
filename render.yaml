@@ -1,0 +1,62 @@
+services:
+  - type: web
+    name: sovereign-omega
+    runtime: docker
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
+    plan: starter
+    region: oregon
+
+    # Render injects PORT automatically — app reads it at startup
+    envVars:
+      # ── Required: Pharos Chain ──────────────────────────────────────────────
+      - key: DEPLOYER_PRIVATE_KEY
+        sync: false          # Set manually in Render dashboard — never commit
+
+      - key: PHAROS_NETWORK
+        value: testnet       # Change to "mainnet" when ready
+
+      - key: PHAROS_REGISTRY
+        value: "0x6EAB7862385329BdaaD32f2b9587a66E768018Ba"
+
+      - key: PHAROS_VAULT
+        value: "0xAbC106D943a6Aff91A0B29f4a77E4009323d7A66"
+
+      - key: PHAROS_LEARNER
+        value: "0x799006C9b1e946d3A2909b81F3C3087D71bB9F84"
+
+      - key: AGENT_OPERATOR_ADDRESS
+        value: "0xdBbf66CAD621dA3Ec186D18b29a135d2A5d42d20"
+
+      # ── Trading ─────────────────────────────────────────────────────────────
+      - key: TRADING_ENABLED
+        value: "true"
+
+      # ── Optional: AI reasoning (real LLM vs mock mode) ──────────────────────
+      - key: ANTHROPIC_API_KEY
+        sync: false          # Set manually in Render dashboard
+
+      # ── Optional: Social bots ───────────────────────────────────────────────
+      - key: TWITTER_API_KEY
+        sync: false
+      - key: TWITTER_API_SECRET
+        sync: false
+      - key: TWITTER_ACCESS_TOKEN
+        sync: false
+      - key: TWITTER_ACCESS_SECRET
+        sync: false
+      - key: TWITTER_BEARER_TOKEN
+        sync: false
+      - key: DISCORD_BOT_TOKEN
+        sync: false
+      - key: DISCORD_CHANNEL_ID
+        sync: false
+      - key: TELEGRAM_BOT_TOKEN
+        sync: false
+
+      # ── Optional: PostgreSQL (Render add-on or external) ────────────────────
+      - key: DATABASE_URL
+        sync: false          # Set if using Render PostgreSQL add-on
+
+    healthCheckPath: /api/v1/health
+    autoDeploy: true

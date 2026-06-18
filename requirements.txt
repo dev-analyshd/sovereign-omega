@@ -1,113 +1,31 @@
+# ── Web framework ──────────────────────────────────────────────────────────────
 fastapi>=0.115.0
 uvicorn[standard]>=0.34.0
 pydantic>=2.10.0
 httpx>=0.28.0
+python-dotenv>=1.0.0
 
-# Crypto / Web3
+# ── Crypto / Web3 ──────────────────────────────────────────────────────────────
 web3>=7.0.0
 eth-account>=0.13.0
 
-# ML / Reasoning
+# ── AI / Reasoning ─────────────────────────────────────────────────────────────
+anthropic>=0.46.0
 sentence-transformers>=3.0.0
 faiss-cpu>=1.8.0
+
+# ── Data / Trading ─────────────────────────────────────────────────────────────
 numpy>=2.2.0
-anthropic>=0.46.0
-
-# Trading
-ccxt>=4.0.0
 pandas>=2.2.0
+ccxt>=4.0.0
 
-# Database
+# ── Database ───────────────────────────────────────────────────────────────────
 asyncpg>=0.30.0
 
-# Social bots
+# ── Social bots (optional) ─────────────────────────────────────────────────────
 tweepy>=4.14.0
 discord.py>=2.4.0
 python-telegram-bot>=21.0
 
-# Monitoring
+# ── Monitoring ─────────────────────────────────────────────────────────────────
 prometheus-client>=0.21.0
-
-# Misc
-python-dotenv>=1.0.0
-anthropic
-fastapi
-httpx
-pydantic
-python-dotenv
-uvicorn[standard]
-anthropic
-asyncpg
-fastapi
-httpx
-numpy
-pandas
-prometheus-client
-pydantic
-python-dotenv
-uvicorn[standard]
-anthropic
-asyncpg
-ccxt
-discord.py
-eth-account
-faiss-cpu
-fastapi
-httpx
-numpy
-pandas
-prometheus-client
-pydantic
-python-dotenv
-python-telegram-bot
-sentence-transformers
-tweepy
-uvicorn[standard]
-web3
-ccxt
-eth-account
-python-telegram-bot
-tweepy
-web3
-asyncpg
-fastapi
-httpx
-numpy
-pandas
-prometheus-client
-pydantic
-python-dotenv
-uvicorn[standard]
-anthropic
-asyncpg
-ccxt
-discord.py
-eth-account
-faiss-cpu
-fastapi
-httpx
-numpy
-pandas
-prometheus-client
-pydantic
-python-dotenv
-python-telegram-bot
-sentence-transformers
-tweepy
-uvicorn[standard]
-web3
-fastapi
-httpx
-prometheus-client
-pydantic
-python-dotenv
-uvicorn[standard]
-anthropic
-asyncpg
-fastapi
-httpx
-prometheus-client
-pydantic
-python-dotenv
-uvicorn[standard]
-anthropic

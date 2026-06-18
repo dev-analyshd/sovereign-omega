@@ -2,28 +2,41 @@ FROM python:3.11-slim
 
 WORKDIR /app
 
-# System deps
+# System deps (build tools for faiss-cpu, web3, numpy)
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    build-essential curl git && rm -rf /var/lib/apt/lists/*
+    build-essential curl git gcc g++ && \
+    rm -rf /var/lib/apt/lists/*
 
-# Rust for entropy module
-RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y --default-toolchain stable
+# Rust toolchain (for sovereign_entropy Rust extension)
+RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | \
+    sh -s -- -y --default-toolchain stable --profile minimal
 ENV PATH="/root/.cargo/bin:${PATH}"
 
-# Python deps
+# Install Python dependencies
 COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt maturin
+RUN pip install --no-cache-dir --upgrade pip && \
+    pip install --no-cache-dir maturin && \
+    pip install --no-cache-dir -r requirements.txt
 
-# Build Rust entropy module
+# Build Rust entropy module (falls back gracefully if build fails)
 COPY entropy/ entropy/
-RUN cd entropy && maturin build --release && pip install target/wheels/*.whl
+RUN cd entropy && \
+    maturin build --release 2>/dev/null && \
+    pip install --no-cache-dir target/wheels/*.whl 2>/dev/null || \
+    echo "Rust entropy module not built — using Python fallback"
 
-# Copy source
+# Copy application source
 COPY . .
 
-# Create data directory
-RUN mkdir -p data
+# Create persistent data directories
+RUN mkdir -p data memory/faiss_index
 
-EXPOSE 8000
+# Render injects PORT; default to 8000 for local Docker
+ENV PORT=8000
 
-CMD ["uvicorn", "api.main:app", "--host", "0.0.0.0", "--port", "8000"]
+EXPOSE ${PORT}
+
+HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=3 \
+    CMD curl -f http://localhost:${PORT}/api/v1/health || exit 1
+
+CMD uvicorn api.main:app --host 0.0.0.0 --port ${PORT}
