@@ -1,0 +1,13 @@
+uploads = []
+
+[[generated]]
+id = "mcACcR_5rRIVxbw3focK3"
+uri = "file://attached_assets/sovereign_omega_logo.png"
+type = "image"
+title = "sovereign omega AI logo"
+
+[[outputs]]
+id = "8qhEasn3gcDSjCsMgJL2V"
+uri = "file://attached_assets/sovereign_omega_logo.png"
+type = "image"
+title = "SOVEREIGN-Ω Logo"
